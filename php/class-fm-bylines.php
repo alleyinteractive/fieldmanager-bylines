@@ -22,12 +22,13 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		public function setup() {
 			add_action( 'init', array( $this, 'setup_data_structure' ), 20 );
 
-			//add_filter( 'the_author', array( $this, 'get_author_byline' ), 20, 1 );
 			// Add custom meta boxes
 			if ( is_admin() ) {
 				add_action( 'fm_post_' . $this->name, array( $this, 'add_meta_boxes' ) );
 				add_filter( 'enter_title_here', array( $this, 'set_display_name_description' ), 10, 2 );
 				add_filter( 'fm_presave_alter_values', array( $this, 'save_byline_meta' ), 10, 3 );
+
+				add_action( 'delete_post', array( $this, 'delete_byline' ) );
 			}
 		}
 
@@ -222,6 +223,55 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				}
 			}
 			return $values;
+		}
+
+		/**
+		 * Delete additional byline postmeta data on delete
+		 *
+		 */
+		public function delete_byline( $byline_id ) {
+			$associated_posts = $this->get_byline_associated_posts( $byline_id );
+			foreach ( $associated_posts as $post_id => $byline_types ) {
+				foreach ( $byline_types as $type ) {
+					$meta_key = 'fm_bylines_' . sanitize_title_with_dashes( $type );
+					$meta_data = get_post_meta( $post_id, $meta_key, true );
+					foreach ( $meta_data as $i => $data ) {
+						if ( $data['byline_id'] == $byline_id && $data['fm_byline_type'] == $type ) {
+							unset( $meta_data[ $i ] );
+						}
+					}
+					update_post_meta( $post_id, $meta_key, $meta_data );
+					delete_post_meta( $post_id, $meta_key . '_' . $byline_id );
+				}
+			}
+		}
+
+		/**
+		 * Get associated post_ids of a byline
+		 * @return array.  An associate array with post_id as the key and an array of types as the values.
+		 */
+		public function get_byline_associated_posts( $byline_id ) {
+			global $wpdb;
+			$meta_rows = $wpdb->get_results( $wpdb->prepare(
+				"SELECT A.post_id, A.meta_key
+				FROM $wpdb->postmeta A
+				WHERE A.meta_key like %s",
+				'fm_bylines_%_' . $byline_id
+			) );
+			$associated_posts = array();
+			if ( ! empty( $meta_rows ) ) {
+				foreach ( $meta_rows as $meta_row ) {
+					$pattern = '/^fm_bylines_(.*)_' . $byline_id . '$/';
+					preg_match( $pattern, $meta_row->meta_key, $matches );
+					if ( ! empty( $matches[1] ) ) {
+						$type = $matches[1];
+						if ( empty( $associated_posts[ $meta_row->post_id ] ) || ! in_array( $type, $associated_posts[ $meta_row->post_id ] ) ) {
+							$associated_posts[ $meta_row->post_id ][] = $type;
+						}
+					}
+				}
+			}
+			return $associated_posts;
 		}
 
 		/**
