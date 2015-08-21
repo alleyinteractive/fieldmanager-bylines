@@ -25,3 +25,7 @@ Currently the post counts are inaccurate and it would be nice to add columns in 
 `fm_add_byline_meta_box` has not been tested w/ anything other than posts for Fieldmanager and needs work there.
 
 It may be nice to add in a custom byline skin for the FM box that could bring in info like featured image or other useful metadata
+
+### Rewrites
+
+Along with feeds needing to be addressed, currently all bylines just operate off the `byline` slug. This of course can be overridden with the `fm_bylines_filter_rewrite_slug` filter hook, but there is no logic currentlty in place for rewrites for individual byline types.  This will require some sort of registration of the byline types and a global variable. Again haven't dug much here but it might be a nice feature.
