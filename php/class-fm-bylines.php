@@ -30,6 +30,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 				add_action( 'delete_post', array( $this, 'delete_byline' ) );
 			}
+
+			add_filter( 'template_include', array( $this, 'set_byline_template') );
 		}
 
 		public function setup_data_structure() {
@@ -74,6 +76,59 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			);
 
 			register_post_type( $this->name, $args );
+		}
+
+		/**
+		 * Return all the known meta keys for bylines mapped to the correct meta field.  Use for get_the_author_meta() and
+		 * Uses relevant default author meta fields and byline fm fields
+		 * User login specific meta keys have been dropped.
+		 * Use the filter hook if you need to add more
+		 */
+		public function byline_meta_keys() {
+			$keys = array(
+				'ID' => 'ID', // These values are actually post fields
+				'user_nicename' => 'post_name',
+				'nickname' => 'post_title',
+				'nicename' => 'post_name',
+
+				'email' => 'email', // These are you basic post meta keys
+				'website' => 'website',
+				'url' => 'website',
+				'user_email' => 'email',
+				'user_url'  =>  'website',
+				'display_name' => 'post_title',
+				'first_name' => 'first_name',
+				'last_name' => 'last_name',
+				'user_firstname' => 'first_name',
+				'user_lastname' => 'last_name',
+				'description' => 'bio',
+				'bio' => 'bio',
+
+				'twitter' => 'twitter',
+				'jabber' => 'jabber', // These social media sites below are not default in FM Bylines. Feel free to add them using the fm_bylines_filter_contact_fields hook.
+				'aim' => 'aim',
+				'yim' => 'yim',
+				'googleplus' => 'googleplus',
+
+				'login' => 'fm_error_key', // We don't want this info shared when we are using fm bylines, so we set a default error key
+				'pass' => 'fm_error_key',
+				'registered' => 'fm_error_key',
+				'activation_key' => 'fm_error_key',
+				'status' => 'fm_error_key',
+				'user_login' => 'fm_error_key',
+				'user_pass' => 'fm_error_key',
+				'user_registered' => 'fm_error_key',
+				'user_activation_key' => 'fm_error_key',
+				'user_status' => 'fm_error_key',
+				'roles' => 'fm_error_key',
+				'user_level' => 'fm_error_key',
+				'rich_editing' => 'fm_error_key',
+				'comment_shortcuts' => 'fm_error_key',
+				'admin_color' => 'fm_error_key',
+				'plugins_per_page' => 'fm_error_key',
+				'plugins_last_view ' => 'fm_error_key',
+			);
+			return apply_filters( 'fm_bylines_filter_meta_keys', $keys );
 		}
 
 		/**
@@ -132,6 +187,24 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'children' => $fm_about_children,
 			) );
 			$fm_about->add_meta_box( __( 'About', 'fm_bylines' ), array( $this->name ) );
+		}
+
+		/**
+		 * Add in ability to query single-byline as well as single-fm_byline
+		 */
+		public function set_byline_template( $template ) {
+			$object = get_queried_object();
+
+			if ( ! empty( $object->post_type ) && $this->name == $object->post_type ) {
+				$templates = array();
+				$templates[] = "single-byline.php";
+				$templates[] = "single-{$object->post_type}.php";
+				$templates[] = "single.php";
+
+				return get_query_template( 'single', $templates );
+			}
+
+			return $template;
 		}
 
 		/**
@@ -205,7 +278,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		 *
 		 */
 		public function save_byline_meta( $values, $object, $current_values ) {
-			if (  preg_match( '/fm_bylines_/', $object->name ) ) {
+			// Check the byline type as this field is not added on the byline post type page.
+			if ( preg_match( '/fm_bylines_/', $object->name ) && ! empty( $value['fm_byline_type'] ) ) {
 				$post_id = get_the_ID();
 				foreach ( $current_values as $current_value ) {
 					if ( ! empty( $current_value['byline_id'] ) ) {
@@ -227,27 +301,31 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 		/**
 		 * Delete additional byline postmeta data on delete
-		 *
+		 * @param int $byline_id
+		 * @return void
 		 */
 		public function delete_byline( $byline_id ) {
-			$associated_posts = $this->get_byline_associated_posts( $byline_id );
-			foreach ( $associated_posts as $post_id => $byline_types ) {
-				foreach ( $byline_types as $type ) {
-					$meta_key = 'fm_bylines_' . sanitize_title_with_dashes( $type );
-					$meta_data = get_post_meta( $post_id, $meta_key, true );
-					foreach ( $meta_data as $i => $data ) {
-						if ( $data['byline_id'] == $byline_id && $data['fm_byline_type'] == $type ) {
-							unset( $meta_data[ $i ] );
+			if ( $this->name == get_post_type( $byline_id ) ) {
+				$associated_posts = $this->get_byline_associated_posts( $byline_id );
+				foreach ( $associated_posts as $post_id => $byline_types ) {
+					foreach ( $byline_types as $type ) {
+						$meta_key = 'fm_bylines_' . sanitize_title_with_dashes( $type );
+						$meta_data = get_post_meta( $post_id, $meta_key, true );
+						foreach ( $meta_data as $i => $data ) {
+							if ( ( empty( $data['byline_id'] ) || $data['byline_id'] == $byline_id ) && $data['fm_byline_type'] == $type ) {
+								unset( $meta_data[ $i ] );
+							}
 						}
+						update_post_meta( $post_id, $meta_key, $meta_data );
+						delete_post_meta( $post_id, $meta_key . '_' . $byline_id );
 					}
-					update_post_meta( $post_id, $meta_key, $meta_data );
-					delete_post_meta( $post_id, $meta_key . '_' . $byline_id );
 				}
 			}
 		}
 
 		/**
 		 * Get associated post_ids of a byline
+		 * @param int $byline_id
 		 * @return array.  An associate array with post_id as the key and an array of types as the values.
 		 */
 		public function get_byline_associated_posts( $byline_id ) {
@@ -255,7 +333,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			$meta_rows = $wpdb->get_results( $wpdb->prepare(
 				"SELECT A.post_id, A.meta_key
 				FROM $wpdb->postmeta A
-				WHERE A.meta_key like %s",
+				WHERE A.meta_key LIKE %s",
 				'fm_bylines_%_' . $byline_id
 			) );
 			$associated_posts = array();
@@ -311,7 +389,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			if ( ! empty( $post_meta ) && is_array( $post_meta ) ) {
 				return wp_list_pluck( $post_meta, 'byline_id' );
 			}
-			return;
+			return array();
 		}
 
 		/**
@@ -329,6 +407,133 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				return get_posts( $args );
 			}
 			return false;
+		}
+
+		/**
+		 * Are we currently on a byline archive page.  Equivalent to is_author()
+		 *
+		 */
+		public function is_byline( $type = 'author' ) {
+			$post_type = get_post_type();
+
+			if ( $this->name != $post_type ) {
+				return false;
+			}
+
+			global $wp;
+			$request = explode( '/', $wp->request );
+			if ( $request[0] == $type ) {
+				return true;
+			}
+
+			return false;
+		}
+
+		/**
+		 * Get Byline meta data.  Equivalent of get_the_author_meta().
+		 * @param int. byline id
+		 * @return mixed
+		 */
+		public function get_the_byline_meta( $field, $byline_id = null ) {
+			if ( empty( $field ) ) {
+				return;
+			}
+
+			if ( empty( $byline_id ) ) {
+				// Some core calls to get_author_meta don't pass an id.  Not sure of the best solution here functions like get_the_author_link don't have a hook available
+				// We will just pull off the first byline author of a post.
+				$byline_ids = $this->get_byline_ids();
+				$byline_id = reset( $byline_ids );
+			}
+
+			$byline = get_post( $byline_id );
+
+			if ( $byline->post_type == $this->name ) {
+				$fields = $this->byline_meta_keys();
+				if ( ! empty( $fields[ $field ] ) ) {
+					$field_key = $fields[ $field ];
+				} else {
+					// This allows you to retrieve any meta key
+					$field_key = $field;
+				}
+
+				if ( 'fm_error_key' == $field_key ) {
+					return;
+				}
+				if ( in_array( $field_key, array( 'ID', 'post_name', 'post_title' ) ) ) {
+					return $byline->$field_key;
+				}
+
+				$byline_meta = get_post_meta( $byline_id );
+				foreach ( $byline_meta as $key => $value ) {
+					if ( $field_key == $key ) {
+						return maybe_unserialize( $value[0] );
+					} elseif ( is_serialized( $value[0] ) ) {
+						$meta_values = maybe_unserialize( $value[0] );
+						if ( array_key_exists( $field_key, $meta_values ) ) {
+							return $meta_values[ $field_key ];
+						}
+					}
+				}
+			}
+			return;
+		}
+
+		/**
+		 * Get the html byline url for all bylines of a post of a given type
+		 * @param int, post_id
+		 * @param string. type
+		 * @return string
+		 */
+		public function get_bylines_posts_links( $post_id = null, $type = 'author' ) {
+			$byline_ids = $this->get_byline_ids( $post_id, $type );
+			$urls = array();
+			foreach ( $byline_ids as $byline_id ) {
+				$urls[] = sprintf(
+					'<a href="%1$s" rel="%2$s">%3$s</a>',
+					esc_url( $this->get_byline_posts_url( $byline_id ) ),
+					esc_attr( $type ),
+					esc_html( get_the_title( $byline_id ) )
+				);
+			}
+
+			echo $this->write_byline( $urls );
+		}
+
+		/**
+		 * Get the byline url
+		 * Takes a single byline id
+		 * @param int. byline_id
+		 * @return string
+		 */
+		public function get_byline_posts_url( $byline_id ) {
+			return get_permalink( $byline_id );
+		}
+
+		/**
+		 * Write a byline
+		 * @param array. An array of bylines to write
+		 * @return string
+		 */
+		public function write_byline( $bylines, $before = null, $separator = null, $final_separator = null, $after = null ) {
+			if ( empty( $bylines ) ) {
+				return;
+			}
+			// Allow these to be filtered in case folks want to change the way the authors are handled
+			$before = ( empty( $before ) ) ? __( 'By', 'fm_bylines' ) : $before;
+			$before = apply_filters( 'fm_bylines_write_byline_before', $before );
+			$separator = ( empty( $separator ) ) ? ',' : $separator;
+			$separator = apply_filters( 'fm_bylines_write_byline_separator', $separator );
+			$final_separator = ( empty( $final_separator ) ) ? __( 'and', 'fm_bylines' ) : $final_separator;
+			$final_separator = apply_filters( 'fm_bylines_write_byline_final_separator', $final_separator );
+			$after = ( empty( $after ) ) ? '' : $after;
+			$after = apply_filters( 'fm_bylines_write_byline_after', $after );
+
+
+			$last = array_slice( $bylines, -1 );
+			$first = implode( esc_html( $separator ) . ' ', array_slice( $bylines, 0, -1 ) );
+			$both = array_filter( array_merge( array( $first ), $last ) );
+			return wp_kses_post( $before ) . ' ' . implode( esc_html( ' ' . $final_separator . ' ' ), $both ) . ' ' . wp_kses_post( $after );
 		}
 
 	}

@@ -24,20 +24,106 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		}
 
 		public function setup() {
+			// Set the global author data
+			// add_action( 'the_post', array( $this, 'set_global_authordata' ) );
+
 			if ( is_admin() ) {
 				$this->context = fm_get_context();
 				if ( 'post' === $this->context[0] ) {
 					add_action( 'do_meta_boxes', array( $this, 'remove_meta_boxes' ) );
 					add_action( "fm_{$this->context[0]}_{$this->context[1]}", array( $this, 'add_meta_boxes' ) );
 				}
-				add_filter( "manage_{$this->context[1]}_posts_columns", array( $this, 'set_posts_columns' ) );
+				// Set the column super early so other plugins can manipulate it using the same hook
+				add_filter( "manage_{$this->context[1]}_posts_columns", array( $this, 'set_posts_columns' ), 2, 2 );
 				add_action( "manage_{$this->context[1]}_posts_custom_column", array( $this, 'display_author_column' ), 10, 2 );
 
 			}
 			add_filter('the_author', array( $this, 'get_the_author' ) );
 			add_filter( 'is_multi_author', array( $this, 'is_multi_author' ) );
 
+			$keys = $this->byline_meta_keys();
+			foreach ( array_keys( $keys ) as $key ) {
+				add_filter( "get_the_author_{$key}", array( $this, 'get_the_byline_meta' ), 10, 2 );
+			}
+
+			add_filter( 'the_author_posts_link', array( $this, 'get_author_posts_link' ) );
+			add_filter( 'author_link', array( $this, 'get_author_link' ), 10, 3 );
+
+			add_filter( 'author_rewrite_rules', array( $this, 'set_author_rewrite_rules') );
+			add_filter( 'template_include', array( $this, 'set_author_template') );
+
 			add_action( 'transition_post_status', array( $this, 'early_transition_post_status' ), 1, 3 );
+		}
+
+		/**
+		 * There are a number of functions that are not hookable
+		 * Set the author data object to just use the first author byline if there is more than one for the un-hookable functions
+		 * This feels a little dirty.  Would love thoughts on if this even needs to be done.
+		 */
+		public function set_global_authordata( $post ) {
+			if ( is_array( $post ) ) {
+				$post = reset( $post );
+			}
+			global $authordata;
+
+			$byline_ids = $this->get_byline_ids( $post->ID, 'author' );
+			$author_data_object = new stdClass();
+
+			if ( ! empty( $byline_ids ) ) {
+				$byline_id = reset( $byline_ids );
+				$byline = get_post( $byline_id );
+				$author_data_object->ID = $byline_id;
+				$author_data_object->user_nicename = $byline->post_name;
+				$author_data_object->user_displayname = $byline->post_title;
+				$author_data_object->user_email = $this->get_the_byline_meta( 'email', $byline_id );
+			} else {
+				$byline_id = null;
+			}
+			$authordata->data = $author_data_object;
+			$authordata->ID = $byline_id;
+			$authordata->caps = array();
+			$authordata->cap_key = array();
+			$authordata->allcaps = array();
+			$authordata->roles = array();
+		}
+
+		/**
+		 * Set the author rewrite rules to use FM Bylines
+		 */
+		public function set_author_rewrite_rules( $author_rewrite ) {
+			$author_rewrite = array(
+				'author/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&feed=$matches[2]',
+				'author/([^/]+)/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&feed=$matches[2]',
+				'author/([^/]+)/page/?([0-9]{1,})/?$' => 'index.php?' . $this->name . '=$matches[1]&paged=$matches[2]',
+				'author/([^/]+)/?$' => 'index.php?' . $this->name . '=$matches[1]',
+				'author/?$' => 'index.php?post_type=' . $this->name . '',
+				'author/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&feed=$matches[1]',
+				'author/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&feed=$matches[1]	other',
+				'author/page/([0-9]{1,})/?$' => 'index.php?post_type=' . $this->name . '&paged=$matches[1]',
+			);
+
+			return $author_rewrite;
+		}
+
+		/**
+		 * Use the author template for any fm bylines of type author
+		 */
+		public function set_author_template( $template ) {
+			$object = get_queried_object();
+
+			if ( ! empty( $object->ID ) && fm_is_byline( 'author' ) ) {
+				$templates = array();
+				$templates[] = "author-{$object->post_name}.php";
+				$templates[] = "author-{$object->ID}.php";
+				$templates[] = "author.php";
+				$templates[] = "single-byline.php";
+				$templates[] = "single-{$object->post_type}.php";
+				$templates[] = "single.php";
+
+				return get_query_template( 'author', $templates );
+			}
+
+			return $template;
 		}
 
 		/**
@@ -126,9 +212,25 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 
 		/**
 		 * Get the author link
+		 *
+		 * @param string $link
+		 * @param int $author_id (WP user id)
+		 * @param $author_nicename (WP user nicename)
+		 * @return string
 		 */
 		public function get_author_link( $link, $author_id, $author_nicename ) {
+			$byline_ids = $this->get_byline_ids();
 			return $link;
+		}
+
+		/**
+		 * Get the author posts link html
+		 *
+		 * @param string $link
+		 * @return string
+		 */
+		public function get_author_posts_link( $link ) {
+			return $this->get_bylines_posts_links();
 		}
 
 		/**
