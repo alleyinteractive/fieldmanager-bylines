@@ -19,3 +19,9 @@ This plugin requires Fieldmanager 1.0-alpha or higher.
 ### Admin Area
 
 Currently the post counts are inaccurate and it would be nice to add columns in that list the byline types associated with a theme with corresponding counts.  This might require a global variable but I haven't had a chance to dip into it yet.
+
+### Metabox
+
+`fm_add_byline_meta_box` has not been tested w/ anything other than posts for Fieldmanager and needs work there.
+
+It may be nice to add in a custom byline skin for the FM box that could bring in info like featured image or other useful metadata
