@@ -69,7 +69,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'query_var' => true,
 				'taxonomies' => array(),
 				'has_archive' => true,
-				'rewrite' => apply_filters( 'fm_bylines_filter_rewrite_slug', array( 'slug' => 'byline' ) ),
+				'rewrite' => apply_filters( 'fm_bylines_filter_rewrite_slug', array( 'slug' => 'byline', 'with_front' => false ) ),
 				'hierarchical' => false,
 				'supports' => array( 'title', 'thumbnail' ),
 				'show_in_menu' => 'users.php',
