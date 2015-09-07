@@ -331,8 +331,9 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		 * We first check to see if the request is for a byline, if it is we override the previous avatar.  Otherwise keep what is spit back from core.
 		 */
 		public function get_avatar( $avatar, $id_or_email, $size, $default, $alt, $args ) {
-			if ( ( is_numeric( $id_or_email ) && get_post_type( $id_or_email ) == $this->name ) ||
-				( is_object( $id_or_email ) && ! empty( $id_or_email->post_type ) &&  $id_or_email->post_type == $this->name ) ) {
+			// Bylines will not get avatar by email.
+			if ( ! is_admin() && ( ( is_numeric( $id_or_email ) && get_post_type( $id_or_email ) == $this->name ) ||
+				( is_object( $id_or_email ) && ! empty( $id_or_email->post_type ) && $id_or_email->post_type == $this->name ) ) ) {
 				$byline = get_post( $id_or_email );
 
 				// If you want to show default avatars for comments aand users but not bylines, you can override the options with this hook
@@ -368,8 +369,6 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				} else {
 					$avatar = '';
 				}
-			} elseif ( is_email( $id_or_email ) ) {
-				// Torn if we really should use get avatar by email.  This really makes little sense as a byline function.  But it's here anyway.
 			}
 
 			return $avatar;
