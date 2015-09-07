@@ -32,6 +32,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			}
 
 			add_filter( 'template_include', array( $this, 'set_byline_template') );
+			add_filter( 'get_avatar', array( $this, 'get_avatar' ), 1, 6 );
+
 		}
 
 		public function setup_data_structure() {
@@ -105,7 +107,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'bio' => 'bio',
 
 				'twitter' => 'twitter',
-				'jabber' => 'jabber', // These social media sites below are not default in FM Bylines. Feel free to add them using the fm_bylines_filter_contact_fields hook.
+				'jabber' => 'jabber', // These social media sites below are not default in FM Bylines. Feel free to add them using the fm_bylines_filter_contact_info_fields hook.
 				'aim' => 'aim',
 				'yim' => 'yim',
 				'googleplus' => 'googleplus',
@@ -168,7 +170,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				$fm_contact_children[ $slug ] = new Fieldmanager_Textfield( $label, array() );
 			}
 
-			$fm_contact_children = apply_filters( 'fm_bylines_filter_contact_fields', $fm_contact_children );
+			$fm_contact_children = apply_filters( 'fm_bylines_filter_contact_info_fields', $fm_contact_children );
 
 			$fm_contact_info = new Fieldmanager_Group( array(
 				'name' => 'fm_bylines_contact_info',
@@ -278,21 +280,21 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		 *
 		 */
 		public function save_byline_meta( $values, $object, $current_values ) {
+
 			// Check the byline type as this field is not added on the byline post type page.
-			if ( preg_match( '/fm_bylines_/', $object->name ) && ! empty( $value['fm_byline_type'] ) ) {
+			if ( preg_match( '/fm_bylines_/', $object->name ) && get_post_type() != $this->name ) {
 				$post_id = get_the_ID();
 				foreach ( $current_values as $current_value ) {
 					if ( ! empty( $current_value['byline_id'] ) ) {
-						$current_type = $current_value['fm_byline_type'];
-						delete_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_' . $value['byline_id'] );
+						delete_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $current_value['fm_byline_type'] ) . '_' . $current_value['byline_id'] );
 					}
 				}
+
 				foreach ( $values as $i => $value ) {
-					$type = $value['fm_byline_type'];
-					if ( empty( $value['byline_id'] ) ) {
+					if ( empty( $value['byline_id'] ) || empty( $value['fm_byline_type'] ) ) {
 						unset( $values[ $i ] );
 					} else {
-						update_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_' . $value['byline_id'], true );
+						update_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $value['fm_byline_type'] ) . '_' . $value['byline_id'], true );
 					}
 				}
 			}
@@ -321,6 +323,56 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 					}
 				}
 			}
+		}
+
+		/**
+		 * Get the avatar associated with a byline
+		 * Some trickey stuff is going on here since avatars are used for users as well on the back-end so we don't want to necessarily override this functionailty for comments or for user display on the backend
+		 * We first check to see if the request is for a byline, if it is we override the previous avatar.  Otherwise keep what is spit back from core.
+		 */
+		public function get_avatar( $avatar, $id_or_email, $size, $default, $alt, $args ) {
+			if ( ( is_numeric( $id_or_email ) && get_post_type( $id_or_email ) == $this->name ) ||
+				( is_object( $id_or_email ) && ! empty( $id_or_email->post_type ) &&  $id_or_email->post_type == $this->name ) ) {
+				$byline = get_post( $id_or_email );
+
+				// If you want to show default avatars for comments aand users but not bylines, you can override the options with this hook
+				$display_default = apply_filters( 'fm_bylines_display_avatar_default' , $args['force_display'] || get_option( 'show_avatars' ) );
+
+				// Set our avatar args
+				$params = array(
+					'class' =>  'avatar avatar-' . (string) $size . ' photo',
+				);
+				if ( ! empty( $alt ) ) {
+					$params['alt'] = $alt;
+				}
+
+				if ( has_post_thumbnail( $byline->ID ) ) {
+
+					if ( is_numeric( $size ) ) {
+						$size = array( $size, $size );
+					}
+					$avatar = get_the_post_thumbnail( $byline->ID, $size, $params );
+
+				} elseif ( $display_default ) {
+					$args['force_default'] = 'y';
+					$avatar = sprintf(
+						"<img alt='%s' src='%s' srcset='%s' class='%s' height='%d' width='%d' %s/>",
+						esc_attr( $args['alt'] ),
+						esc_url( get_avatar_url( $id_or_email, array_merge( $args, array( 'force_default' => 'y' ) ) ) ),
+						esc_attr( get_avatar_url( $id_or_email, array_merge( $args, array( 'force_default' => 'y', 'size' => (int) $size * 2 ) ) ) . ' 2x' ),
+						esc_attr( $params['class'] . ' avatar-default' ),
+						(int) $size,
+						(int) $size,
+						$args['extra_attr']
+			        );
+				} else {
+					$avatar = '';
+				}
+			} elseif ( is_email( $id_or_email ) ) {
+				// Torn if we really should use get avatar by email.  This really makes little sense as a byline function.  But it's here anyway.
+			}
+
+			return $avatar;
 		}
 
 		/**
@@ -356,20 +408,21 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		 * Get a list of byline objects for a post
 		 * @param int $post_id
 		 * @param string $type. Defaults to author.
-		 * @return $
+		 * @return array()
 		 */
-		public function get_byline( $post_id = null, $type = 'author' ) {
+		public function get_byline( $post_id = null, $type = 'author', $params = array() ) {
 			if ( empty( $post_id ) ) {
 				$post_id = get_the_ID();
 			}
 			$byline_ids = $this->get_byline_ids( $post_id, $type );
-			$args = apply_filters( 'fm_bylines_filter_get_byline_args', array(
-				'posts_per_page'   => 50,
+			$defaults = array(
+				'posts_per_page' => 50,
 				'post_type' => $this->name,
 				'post_status' => 'publish',
 				'suppress_filters' => 'false',
 				'include' => $byline_ids
-			) );
+			);
+			$args = wp_parse_args( $params, $defaults );
 
 			return ! empty( $byline_ids ) ? get_posts( $args ) : array();
 		}
@@ -378,7 +431,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		 * Get a list of byline ids for a post
 		 * @param int $post_id
 		 * @param string $type. Defaults to author.
-		 * @return $
+		 * @return array
 		 */
 		public function get_byline_ids( $post_id = null, $type = 'author' ) {
 			if ( empty( $post_id ) ) {
@@ -395,15 +448,15 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get all the posts for a single byline
 		 */
-		public function get_byline_posts( $byline_id, $type = 'author' ) {
+		public function get_byline_posts( $byline_id, $type = 'author', $params = array() ) {
 			if ( ! empty( $byline_id ) ) {
-				$args = apply_filters( 'fm_bylines_filter_get_byline_posts_args', array(
+				$defaults = array(
 					'post_type' => array( 'post' ),
 					'post_status' => 'publish',
 					'meta_key' => 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_' . $byline_id,
 					'suppress_filters' => false,
-				) );
-
+				);
+				$args = wp_parse_args( $params, $defaults );
 				return get_posts( $args );
 			}
 			return false;
@@ -480,7 +533,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		}
 
 		/**
-		 * Get the html byline url for all bylines of a post of a given type
+		 * Get the html byline url for all bylines of a given type for a single post
 		 * @param int, post_id
 		 * @param string. type
 		 * @return string
@@ -489,15 +542,25 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			$byline_ids = $this->get_byline_ids( $post_id, $type );
 			$urls = array();
 			foreach ( $byline_ids as $byline_id ) {
-				$urls[] = sprintf(
-					'<a href="%1$s" rel="%2$s">%3$s</a>',
-					esc_url( $this->get_byline_posts_url( $byline_id ) ),
-					esc_attr( $type ),
-					esc_html( get_the_title( $byline_id ) )
-				);
+				$urls[] = $this->get_byline_link( $byline_id, $type );
 			}
 
 			echo $this->write_byline( $urls );
+		}
+
+		/**
+		 * Get the html markup for a single byline link
+		 * Takes a single byline id
+		 * @param int. byline_id
+		 * @return string
+		 */
+		public function get_byline_link( $byline_id, $type = 'author' ) {
+			return sprintf(
+				'<a href="%1$s" rel="%2$s">%3$s</a>',
+				esc_url( $this->get_byline_url( $byline_id ) ),
+				esc_attr( $type ),
+				esc_html( get_the_title( $byline_id ) )
+			);
 		}
 
 		/**
@@ -506,7 +569,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		 * @param int. byline_id
 		 * @return string
 		 */
-		public function get_byline_posts_url( $byline_id ) {
+		public function get_byline_url( $byline_id, $type = 'author' ) {
+			// TODO: add in permalinks for different byline types
 			return get_permalink( $byline_id );
 		}
 
@@ -533,7 +597,9 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			$last = array_slice( $bylines, -1 );
 			$first = implode( esc_html( $separator ) . ' ', array_slice( $bylines, 0, -1 ) );
 			$both = array_filter( array_merge( array( $first ), $last ) );
-			return wp_kses_post( $before ) . ' ' . implode( esc_html( ' ' . $final_separator . ' ' ), $both ) . ' ' . wp_kses_post( $after );
+			$byline = wp_kses_post( $before ) . ' ' . implode( esc_html( ' ' . $final_separator . ' ' ), $both );
+			$byline .= ( empty( $after ) ) ? '' : ' ' . wp_kses_post( $after );
+			return  $byline;
 		}
 
 	}

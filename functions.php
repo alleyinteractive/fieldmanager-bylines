@@ -14,23 +14,65 @@ function fm_get_byline_ids( $post_id = null, $type = 'author' ) {
  * Get a list of byline objects for a post
  * @param int $post_id
  * @param string $type. Defaults to author.
+ * @param array $args.
  * @return string
  */
-function fm_get_byline( $post_id = null, $type = 'author' ) {
+function fm_get_byline( $post_id = null, $type = 'author', $args = array() ) {
 	$fm_bylines = FM_Bylines();
-	return $fm_bylines->get_byline( $post_id, $type );
+	return $fm_bylines->get_byline( $post_id, $type, $args );
 }
 
 /**
  * Get the posts for a byline user
  * @param int $byline_id.  The byline guest user id.
  * @param string $type.
+ * @param array $args.
  * @return mixed.  array of posts or false
  */
-function fm_get_byline_posts( $byline_id, $type = 'author' ) {
+function fm_get_byline_posts( $byline_id, $type = 'author', $args = array() ) {
 	if ( ! empty( $byline_id ) ) {
 		$fm_bylines = FM_Bylines();
-		return $fm_bylines->get_byline_posts( $byline_id, $type );
+		return $fm_bylines->get_byline_posts( $byline_id, $type, $args );
+	}
+	return false;
+}
+
+/**
+ * Get the html byline url for all bylines of a given type for a single post
+ * @param int, post_id
+ * @param string. type
+ * @return string
+ */
+function fm_get_bylines_posts_links( $post_id = null, $type = 'author' ) {
+	$fm_bylines = FM_Bylines();
+	return $fm_bylines->get_bylines_posts_links( $post_id, $type );
+}
+
+/**
+ * Get the html markup for a single byline link
+ * Takes a single byline id
+ * @param int. byline_id
+ * @return string
+ */
+function fm_get_byline_link( $byline_id, $type = 'author' ) {
+	if ( ! empty( $byline_id ) ) {
+		$fm_bylines = FM_Bylines();
+		return $fm_bylines->get_byline_link( $byline_id, $type );
+	}
+	return false;
+}
+
+/**
+ * Get the byline url
+ * Takes a single byline id
+ * @param int. byline_id
+ * @return string
+ */
+function fm_get_byline_url( $byline_id, $type = 'author' ) {
+	// TODO: add in permalinks for different byline types. Currently only returns permalink
+	if ( ! empty( $byline_id ) ) {
+		$fm_bylines = FM_Bylines();
+		return $fm_bylines->get_byline_url( $byline_id, $type );
 	}
 	return false;
 }
