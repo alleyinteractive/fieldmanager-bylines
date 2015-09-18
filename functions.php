@@ -115,6 +115,11 @@ function fm_get_the_byline_meta( $field, $byline_id ) {
 	return $fm_bylines->get_the_byline_meta( $meta_field, $byline_id );
 }
 
+function fm_get_byline_avatar( $byline_id, $size, $args ) {
+	$fm_bylines = FM_Bylines();
+	return $fm_bylines->get_byline_avatar( $byline_id, $size, $args );
+}
+
 /**
  * This function exists to attempt to create a label from a slug.
  * If the label is complex you can use the filter hook to create a label lookup or modify single slugs.
