@@ -5,13 +5,12 @@ A developer focused plugin that allows for multiple authors on a single post and
 This plugin requires Fieldmanager 1.0-alpha or higher.
 
 To get this to work, simply add a filter hook in functions.php
-```/**
- * Add in the byline types that are used in this theme
- */
+```
 function fm_add_byline_types( $types ) {
 	return array( 'author', 'illustrator', 'content-editor' );
 }
-add_filter( 'fm_bylines_filter_types', 'fm_add_byline_types' );```
+add_filter( 'fm_bylines_filter_types', 'fm_add_byline_types' );
+```
 
 Then simply add the byline type to the post support similar to adding in author support.
 
