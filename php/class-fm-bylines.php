@@ -32,8 +32,12 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			}
 
 			add_filter( 'template_include', array( $this, 'set_byline_template') );
-			add_filter( 'get_avatar', array( $this, 'get_avatar' ), 1, 6 );
 
+			add_filter( 'get_avatar', array( $this, 'get_avatar' ), 20, 6 );
+
+			// Force the user avatar in the admin bar and admin area
+			add_action( 'admin_bar_menu', array( $this, 'force_user_avatar' ), 0 );
+			add_action( 'add_admin_bar_menus', array( $this, 'remove_force_user_avatar' ), 9999 );
 		}
 
 		public function setup_data_structure() {
@@ -252,7 +256,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				} elseif ( 'term' == $fm_context ) {
 					$fm_byline_box->add_term_form( $label, $fm_context_type );
 				} elseif ( 'submenu' == $fm_context ) {
-					fm_register_submenu_page( 'fm_bylines_' . sanitize_title_with_dashes( $type ), apply_filter( 'fm_bylines_filter_metabox_submenu', 'tools.php' ), $label );
+					fm_register_submenu_page( 'fm_bylines_' . sanitize_title_with_dashes( $type ), apply_filters( 'fm_bylines_filter_metabox_submenu', 'tools.php' ), $label );
 					$fm_byline_box->activate_submenu_page();
 				} elseif ( 'user' == $fm_context ) {
 					$fm_byline_box->add_user_form( $label );
@@ -326,52 +330,92 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		}
 
 		/**
-		 * Get the avatar associated with a byline
-		 * Some trickey stuff is going on here since avatars are used for users as well on the back-end so we don't want to necessarily override this functionailty for comments or for user display on the backend
-		 * We first check to see if the request is for a byline, if it is we override the previous avatar.  Otherwise keep what is spit back from core.
+		 * Helper functions for remove and adding filter hooks
 		 */
-		public function get_avatar( $avatar, $id_or_email, $size, $default, $alt, $args ) {
-			// Bylines will not get avatar by email.
-			if ( ! is_admin() && ( ( is_numeric( $id_or_email ) && get_post_type( $id_or_email ) == $this->name ) ||
-				( is_object( $id_or_email ) && ! empty( $id_or_email->post_type ) && $id_or_email->post_type == $this->name ) ) ) {
-				$byline = get_post( $id_or_email );
+		public function force_user_avatar() {
+			add_filter( 'fm_bylines_force_user_avatar_display', '__return_true', 20 );
+		}
+		public function remove_force_user_avatar() {
+			remove_filter( 'fm_bylines_force_user_avatar_display', '__return_true', 20 );
+		}
 
-				// If you want to show default avatars for comments aand users but not bylines, you can override the options with this hook
-				$display_default = apply_filters( 'fm_bylines_display_avatar_default' , $args['force_display'] || get_option( 'show_avatars' ) );
+		/**
+		 * Get the featured image of a byline
+		 * @param mixed. $byline_id int or post object
+		 * @param mixed. $size string or array
+		 * @param array. $args. get_avatar args
+		 * @return string. HTML img string
+		 */
+		public function get_byline_avatar( $byline_id, $size, $args ) {
+			$avatar = '';
+			// Bylines will not get avatar by email.
+			if ( $this->is_byline_object( $byline_id ) ) {
+				$byline = get_post( $byline_id );
+
+				// If you want to show default avatars for comments and users but not bylines, you can override the options with this hook
+				$display_default = apply_filters( 'fm_bylines_display_avatar_default' , ( empty( $args['force_default'] ) ) ? false : $args['force_default'] );
 
 				// Set our avatar args
 				$params = array(
 					'class' =>  'avatar avatar-' . (string) $size . ' photo',
 				);
-				if ( ! empty( $alt ) ) {
-					$params['alt'] = $alt;
+				if ( ! empty( $args['alt'] ) ) {
+					$params['alt'] = $args['alt'];
 				}
 
-				if ( has_post_thumbnail( $byline->ID ) ) {
+				if ( $display_default ) {
+					$args['force_default'] = 'y';
+					$avatar = sprintf(
+						"<img alt='%s' src='%s' srcset='%s' class='%s' height='%d' width='%d' %s/>",
+						esc_attr( $args['alt'] ),
+						esc_url( get_avatar_url( $byline_id, array_merge( $args, array( 'force_default' => 'y' ) ) ) ),
+						esc_attr( get_avatar_url( $byline_id, array_merge( $args, array( 'force_default' => 'y', 'size' => (int) $size * 2 ) ) ) . ' 2x' ),
+						esc_attr( $params['class'] . ' avatar-default' ),
+						(int) $size,
+						(int) $size,
+						$args['extra_attr']
+			        );
+				} elseif ( has_post_thumbnail( $byline->ID ) ) {
 
 					if ( is_numeric( $size ) ) {
 						$size = array( $size, $size );
 					}
 					$avatar = get_the_post_thumbnail( $byline->ID, $size, $params );
 
-				} elseif ( $display_default ) {
-					$args['force_default'] = 'y';
-					$avatar = sprintf(
-						"<img alt='%s' src='%s' srcset='%s' class='%s' height='%d' width='%d' %s/>",
-						esc_attr( $args['alt'] ),
-						esc_url( get_avatar_url( $id_or_email, array_merge( $args, array( 'force_default' => 'y' ) ) ) ),
-						esc_attr( get_avatar_url( $id_or_email, array_merge( $args, array( 'force_default' => 'y', 'size' => (int) $size * 2 ) ) ) . ' 2x' ),
-						esc_attr( $params['class'] . ' avatar-default' ),
-						(int) $size,
-						(int) $size,
-						$args['extra_attr']
-			        );
-				} else {
-					$avatar = '';
 				}
 			}
 
 			return $avatar;
+		}
+
+		/**
+		 * Get the avatar associated with a byline
+		 * Some trickey stuff is going on here since avatars are used for users as well on the back-end so we don't want to necessarily override this functionailty for comments or for user display on the backend
+		 * Best thing to do is to use fm_get_byline_avatar() instead of trying to use the core get_avatar function when you can control when it is called. For any legacy code, this hooks should do the trick.
+		 */
+		public function get_avatar( $avatar, $id_or_email, $size, $default, $alt, $args ) {
+			// Force display here is acting as a legacy param.  So if you force the display, it will force the display of user avatars and not bylines.  You can use this hook to control user avatar display on a granular level.
+			$args['force_display'] = apply_filters( 'fm_bylines_force_user_avatar_display', ( empty( $args['force_display'] ) ) ? false : $args['force_display'] );
+			// If the id returns a byline and a user, then return the user id.
+			if ( ! ( $args['force_display'] ) &&  $this->is_byline_object( $id_or_email ) ) {
+				return $this->get_byline_avatar( $id_or_email, $size, $alt, $args );
+			} else {
+				return $avatar;
+			}
+		}
+
+		/**
+		 * Is the current id a byline object?  Work around for when user ids and byline ids overlap.
+		 * @param mixed. $byline can be an int id, an email string or a comment object.
+		 */
+		public function is_byline_object( $byline ) {
+			// Comment avatars in core are always called with the comment object.
+			// get_avatar only uses user ids in the admin area.
+			if ( ( is_object( $byline ) && ! empty( $byline->post_type ) && $byline->post_type == $this->name ) ||
+				( is_numeric( $byline ) && $this->name == get_post_type( $byline ) ) ) {
+				return true;
+			}
+			return false;
 		}
 
 		/**

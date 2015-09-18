@@ -17,6 +17,7 @@ require_once( dirname( __FILE__ ) . '/php/class-plugin-dependency.php' );
 
 function fm_bylines_init(){
 	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines.php' );
+	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-post.php' );
 	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-author.php' );
 	require_once( dirname( __FILE__ ) . '/functions.php' );
 
