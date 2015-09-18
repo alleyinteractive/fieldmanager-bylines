@@ -102,7 +102,7 @@ function fm_is_byline( $type = 'author', $byline_id = null ) {
 /**
  * Get Byline meta data.  Equivalent of get_the_author_meta().
  * @param string $field
- * @param int. byline id
+ * @param int $byline id
  * @return mixed
  */
 function fm_get_the_byline_meta( $field, $byline_id ) {
@@ -113,4 +113,19 @@ function fm_get_the_byline_meta( $field, $byline_id ) {
 		$meta_field = $field;
 	}
 	return $fm_bylines->get_the_byline_meta( $meta_field, $byline_id );
+}
+
+/**
+ * This function exists to attempt to create a label from a slug.
+ * If the label is complex you can use the filter hook to create a label lookup or modify single slugs.
+ * @param string $slug
+ * @param string $callback Callback function to perform on wordified slug
+ * @return string
+ */
+function fm_bylines_wordify_slug( $slug, $callback = 'ucwords' ) {
+	$label = str_replace( array( '-', '_' ), ' ', $slug );
+	if ( function_exists( $callback ) ) {
+		$label = $callback( $label );
+	}
+	return apply_filters( 'fm_bylines_slug_label', $label, $slug, $callback );
 }
