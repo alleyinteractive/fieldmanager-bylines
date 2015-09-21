@@ -1,22 +1,22 @@
 # Fieldmanager Bylines
 
-A developer focused plugin that allows for multiple authors on a single post and allows for multiple byline types.  This should serve as a lightweight alternative to Co-Authors plus which bloats its self tring to maintain a user-to-author relationship and constraining itself by using a single author taxonomy.  This plugin operates under the assumption that users will not be post authors and removes any association of user logins with authors.
+A plugin that allows for multiple authors on a single post and multiple byline types. This plugin operates under the assumption that users will not be post authors and removes any association of user logins with authors.
 
 This plugin requires Fieldmanager 1.0-alpha or higher.
 
-To get this to work, simply add a filter hook in functions.php
+To get this to work, add a filter hook in functions.php
 ```
-function fm_add_byline_types( $types ) {
+function add_byline_types( $types ) {
 	return array( 'author', 'illustrator', 'content-editor' );
 }
-add_filter( 'fm_bylines_filter_types', 'fm_add_byline_types' );
+add_filter( 'fm_bylines_filter_types', 'add_byline_types' );
 ```
 
-Then simply add the byline type to the post support similar to adding in author support.
+Then add the byline type to the post support similar to adding in author support.
 
 ```add_post_type_support( $post_type, array( 'author', 'illustrator', 'content-editor' ) )```
 
-This will add you meta boxes to your specified post type.
+This will add byline meta boxes to your specified post type.
 
 ## TODO
 
