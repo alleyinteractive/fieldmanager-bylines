@@ -30,7 +30,7 @@ This will add you meta boxes to your specified post type.
 
 `get_author_feed_link()` All feed fixes need to be addressed which is not done yet.  It should be something that is do-able as we can just use the post feed functions in place of it and we'd just need to figure out the logic for determining what author is being queried.
 
-`get_avatar()` Works well for legacy functionality but ideally when calling a byline avatar, you should use the fm_get_byline_avatar()
+`get_avatar()` Works well for legacy functionality but ideally when calling a byline avatar, you should use `fm_get_byline_avatar()`
 
 ### Admin Area
 

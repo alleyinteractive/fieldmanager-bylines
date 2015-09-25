@@ -29,6 +29,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				add_filter( 'fm_presave_alter_values', array( $this, 'save_byline_meta' ), 10, 3 );
 
 				add_action( 'delete_post', array( $this, 'delete_byline' ) );
+
+				add_filter( 'fm_element_classes', array( $this, 'display_default_byline'), 10, 3 );
 			}
 
 			add_filter( 'template_include', array( $this, 'set_byline_template') );
@@ -193,7 +195,43 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'children' => $fm_about_children,
 			) );
 			$fm_about->add_meta_box( __( 'About', 'fm_bylines' ), array( $this->name ) );
+
+			//  User Mapping
+			$fm_user_mapping = new Fieldmanager_Autocomplete( array(
+				'name' => 'fm_bylines_user_mapping',
+				'label' => __( 'WordPress User Login', 'fm_bylines' ),
+				'description' => __( 'This mapping will populate byline meta boxes with this byline by default when this user is logged in.  Users without a mapping will default to byline metaboxes being empty.', 'fm_bylines' ),
+				'datasource' => new Fieldmanager_Datasource_User( array(
+					'reciprocal' => 'fm_bylines_user_mapping',
+					'query_callback' => 'FM_Bylines::get_user_list',
+				) ),
+				'attributes' => array(
+					'style' => 'width: 100%',
+				),
+			) );
+			$fm_user_mapping->add_meta_box( __( 'WordPress User Mapping', 'fm_bylines' ), array( $this->name ), 'side', 'default' );
 		}
+
+		/**
+		 * Make user search allow partial matches
+		 */
+			public static function get_user_list( $fragment ) {
+				$user_args = array(
+					'search_columns' => array( 'user_login', 'user_email' ),
+				);
+				$ret = array();
+
+				if ( $fragment ) {
+					$user_args['search'] = '*' . $fragment . '*';
+				}
+
+				$users = get_users( $user_args );
+				foreach ( $users as $u ) {
+					$ret[ $u->ID ] = $u->user_login;
+				}
+
+				return $ret;
+			}
 
 		/**
 		 * Add in ability to query single-byline as well as single-fm_byline
@@ -225,8 +263,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				$context = fm_get_context();
 				$fm_context = $context[0];
 				$fm_context_type = $context[1];
-
-				$label = empty( $label ) ? ucwords( $type ) : $label;
+				$label = empty( $label ) ? fm_bylines_wordify_slug( $type ) : $label;
 				$defaults = array(
 					'name' => 'fm_bylines_' . sanitize_title_with_dashes( $type ),
 					'limit' => 0,
@@ -235,6 +272,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 					'label' => __( 'Name', 'fm_bylines' ),
 					'children' => array(
 						'byline_id' => new Fieldmanager_Autocomplete( array(
+							'default_value' => null,
 							'datasource' => new Fieldmanager_Datasource_Post( array(
 								'query_args' => array(
 									'post_type' => $this->name,
@@ -267,6 +305,28 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				}
 			}
 		}
+
+		/**
+		 * Only set the default for the first element shown.
+		 */
+		public function display_default_byline( $classes, $name, $field ) {
+			if ( ! empty( $field->data_id ) && get_post_type( $field->data_id ) != $this->name ) {
+				$pattern = '/^fm-fm_bylines_(.*)-(.*)-.*-\d$/';
+				preg_match( $pattern, $field->get_element_id(), $matches );
+				if ( 'byline_id' == $name && ! empty( $matches ) ) {
+					$type = $matches[1];
+					$index = $matches[2];
+					// On new posts only, use default values.  This allows for empty bylines.
+					if ( absint( $index ) === 0 && get_post_status( $field->data_id ) === 'auto-draft' ) {
+						$field->default_value = ( apply_filters( "fm_bylines_{$type}_enable_user_mapping_defaults", $this->get_byline_user_mapping() ) ) ? $this->get_byline_user_mapping() : null;
+					} else {
+						$field->default_value = null;
+					}
+				}
+			}
+			return $classes;
+		}
+
 
 		/**
 		 * Set the display name description
@@ -618,6 +678,31 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		}
 
 		/**
+		 * Get the byline id associated with a user id
+		 * @param int $user_id
+		 * @return mixed(int|boolean) byline post ID or false.
+		 */
+		public function get_byline_user_mapping( $user_id = null ) {
+			if ( empty( $user_id ) ) {
+				$user_id = get_current_user_id();
+			}
+
+			$bylines = get_posts( array(
+				'post_type' => $this->name,
+				'meta_key' => 'fm_bylines_user_mapping',
+				'meta_value' => absint( $user_id ),
+				'suppress_filters' => false,
+				'ignore_sticky_posts' => true,
+				'no_found_rows' => true,
+			) );
+
+			if ( ! empty( $bylines ) && count( $bylines ) === 1 ) {
+				return $bylines[0]->ID;
+			}
+			return false;
+		}
+
+		/**
 		 * Write a byline
 		 * @param array. An array of bylines to write
 		 * @return string
@@ -644,7 +729,6 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			$byline .= ( empty( $after ) ) ? '' : ' ' . wp_kses_post( $after );
 			return  $byline;
 		}
-
 	}
 }
 
