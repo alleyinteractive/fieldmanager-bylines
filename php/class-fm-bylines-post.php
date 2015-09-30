@@ -90,7 +90,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		}
 
 		/**
-		 * Set the author posts column label
+		 * Set the byline posts column label
 		 */
 		public function set_posts_columns( $columns ) {
 			$new_cols = array(
@@ -102,9 +102,15 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 					$new_cols[ 'fm_byline_' . sanitize_title_with_dashes( $type ) ] = esc_html( fm_bylines_wordify_slug( $type ) );
 				}
 			}
-			$new_cols['categories'] = $columns['categories'];
-			$new_cols['tags'] = $columns['tags'];
-			$new_cols['comments'] = $columns['comments'];
+			if ( ! empty( $columns['categories'] ) ) {
+				$new_cols['categories'] = $columns['categories'];
+			}
+			if ( ! empty( $columns['tags'] ) ) {
+				$new_cols['tags'] = $columns['tags'];
+			}
+			if ( ! empty( $columns['comments'] ) ) {
+				$new_cols['comments'] = $columns['comments'];
+			}
 			$new_cols['date'] = $columns['date'];
 
 			return $new_cols;
