@@ -290,11 +290,11 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				$fm_byline_box = new Fieldmanager_Group( wp_parse_args( $args, $defaults ) );
 
 				if ( 'post' == $fm_context ) {
-					$fm_byline_box->add_meta_box( $label, $fm_context_type );
+					$fm_byline_box->add_meta_box( $label, $fm_context_type, apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_post_metabox_context', 'normal' ), apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_post_metabox_priority', 'default' ) );
 				} elseif ( 'term' == $fm_context ) {
 					$fm_byline_box->add_term_form( $label, $fm_context_type );
 				} elseif ( 'submenu' == $fm_context ) {
-					fm_register_submenu_page( 'fm_bylines_' . sanitize_title_with_dashes( $type ), apply_filters( 'fm_bylines_filter_metabox_submenu', 'tools.php' ), $label );
+					fm_register_submenu_page( 'fm_bylines_' . sanitize_title_with_dashes( $type ), apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_metabox_submenu', 'tools.php' ), $label );
 					$fm_byline_box->activate_submenu_page();
 				} elseif ( 'user' == $fm_context ) {
 					$fm_byline_box->add_user_form( $label );
