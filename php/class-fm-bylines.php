@@ -215,23 +215,23 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Make user search allow partial matches
 		 */
-			public static function get_user_list( $fragment ) {
-				$user_args = array(
-					'search_columns' => array( 'user_login', 'user_email' ),
-				);
-				$ret = array();
+		public static function get_user_list( $fragment ) {
+			$user_args = array(
+				'search_columns' => array( 'user_login', 'user_email' ),
+			);
+			$ret = array();
 
-				if ( $fragment ) {
-					$user_args['search'] = '*' . $fragment . '*';
-				}
-
-				$users = get_users( $user_args );
-				foreach ( $users as $u ) {
-					$ret[ $u->ID ] = $u->user_login;
-				}
-
-				return $ret;
+			if ( $fragment ) {
+				$user_args['search'] = '*' . $fragment . '*';
 			}
+
+			$users = get_users( $user_args );
+			foreach ( $users as $u ) {
+				$ret[ $u->ID ] = $u->user_login;
+			}
+
+			return $ret;
+		}
 
 		/**
 		 * Add in ability to query single-byline as well as single-fm_byline
@@ -307,7 +307,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		}
 
 		/**
-		 * Only set the default for the first element shown.
+		 * Only set the default for the first byline in the metabox.
+		 * We overwrite the default value for only the first entry in the metabox if the logged in user is mapped to a byline.
 		 */
 		public function display_default_byline( $classes, $name, $field ) {
 			if ( ! empty( $field->data_id ) && get_post_type( $field->data_id ) != $this->name ) {
@@ -696,7 +697,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'no_found_rows' => true,
 			) );
 
-			if ( ! empty( $bylines ) && count( $bylines ) === 1 ) {
+			if ( ! empty( $bylines ) ) {
 				return $bylines[0]->ID;
 			}
 			return false;
