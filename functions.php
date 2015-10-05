@@ -7,6 +7,9 @@
  */
 function fm_get_byline_ids( $post_id = null, $type = 'author' ) {
 	$fm_bylines = FM_Bylines();
+	if ( ! $post_id ) {
+		$post_id = get_the_ID();
+	}
 	return $fm_bylines->get_byline_ids( $post_id, $type );
 }
 
