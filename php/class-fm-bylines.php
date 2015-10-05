@@ -5,7 +5,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 		private static $instance;
 
-		public $name = 'byline';
+		public $name = 'fm_byline';
 
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
