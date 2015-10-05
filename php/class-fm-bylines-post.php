@@ -31,6 +31,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			// Support byline types by default
 			$this->byline_types = apply_filters( 'fm_bylines_filter_types', array( 'author' ) );
 
+			add_action( 'init', array( $this, 'add_type_query_var' ) );
 			add_action( 'after_setup_theme', array( $this, 'theme_setup' ), 20 );
 
 			if ( is_admin() ) {
@@ -45,8 +46,15 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			}
 
 			add_filter( 'template_include', array( $this, 'set_byline_type_template') );
-			add_filter( 'author_rewrite_rules', array( $this, 'set_author_rewrite_rules') );
+			add_action( 'wp_loaded', array( $this, 'set_byline_rewrite_rules') );
+		}
 
+		/**
+		 * Add in a byline type query var
+		 */
+		public function add_type_query_var() {
+			global $wp;
+			$wp->add_query_var( 'byline_type' );
 		}
 
 		/**
@@ -159,21 +167,28 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		}
 
 		/**
-		 * Set the author rewrite rules to use FM Bylines
+		 * Set the byline rewrite rules to use FM Bylines
 		 */
-		public function set_author_rewrite_rules( $author_rewrite ) {
-			$author_rewrite = array(
-				'author/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&feed=$matches[2]',
-				'author/([^/]+)/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&feed=$matches[2]',
-				'author/([^/]+)/page/?([0-9]{1,})/?$' => 'index.php?' . $this->name . '=$matches[1]&paged=$matches[2]',
-				'author/([^/]+)/?$' => 'index.php?' . $this->name . '=$matches[1]',
-				'author/?$' => 'index.php?post_type=' . $this->name . '',
-				'author/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&feed=$matches[1]',
-				'author/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&feed=$matches[1]	other',
-				'author/page/([0-9]{1,})/?$' => 'index.php?post_type=' . $this->name . '&paged=$matches[1]',
-			);
-
-			return $author_rewrite;
+		public function set_byline_rewrite_rules() {
+			$byline_rewrites = array();
+			foreach ( $this->byline_types as $type ) {
+				$type = sanitize_title_with_dashes( $type );
+				if ( $type != $this->slug ) {
+					$type_rewrites = array(
+						$type . '/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&feed=$matches[2]',
+						$type . '/([^/]+)/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&feed=$matches[2]',
+						$type . '/([^/]+)/page/?([0-9]{1,})/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&paged=$matches[2]',
+						$type . '/([^/]+)/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type,
+						$type . '/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '',
+						$type . '/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
+						$type . '/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
+						$type . '/page/([0-9]{1,})/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&paged=$matches[1]',
+					);
+					foreach ( $type_rewrites as $rewrite ) {
+						add_rewrite_rule( $rewrite, 'top' );
+					}
+				}
+			};
 		}
 	}
 }

@@ -7,6 +7,8 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 		public $name = 'fm_byline';
 
+		public $slug = 'byline';
+
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
 		}
@@ -20,6 +22,9 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		}
 
 		public function setup() {
+			// Set the slug we will use for the base byline type.
+			$this->slug = sanitize_title_with_dashes( apply_filters( 'fm_bylines_filter_rewrite_slug', $this->slug ) );
+
 			add_action( 'init', array( $this, 'setup_data_structure' ), 20 );
 
 			// Add custom meta boxes
@@ -75,7 +80,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'query_var' => true,
 				'taxonomies' => array(),
 				'has_archive' => true,
-				'rewrite' => apply_filters( 'fm_bylines_filter_rewrite_slug', array( 'slug' => 'byline', 'with_front' => false ) ),
+				'rewrite' => array( 'slug' => $this->slug, 'with_front' => false ),
 				'hierarchical' => false,
 				'supports' => array( 'title', 'thumbnail' ),
 				'show_in_menu' => 'users.php',
