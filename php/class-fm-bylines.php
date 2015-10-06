@@ -5,7 +5,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 		private static $instance;
 
-		public $name = 'fm_byline';
+		public $name = 'byline';
 
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
@@ -234,14 +234,13 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 		}
 
 		/**
-		 * Add in ability to query single-byline as well as single-fm_byline
+		 * Add in ability to query single-byline
 		 */
 		public function set_byline_template( $template ) {
 			$object = get_queried_object();
 
 			if ( ! empty( $object->post_type ) && $this->name == $object->post_type ) {
 				$templates = array();
-				$templates[] = "single-byline.php";
 				$templates[] = "single-{$object->post_type}.php";
 				$templates[] = "single.php";
 
