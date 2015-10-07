@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists( 'FM_Bylines' ) ) {
+if ( ! class_exists( 'FM_Bylines' ) ) {
 
 	class FM_Bylines {
 
@@ -35,10 +35,10 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 				add_action( 'delete_post', array( $this, 'delete_byline' ) );
 
-				add_filter( 'fm_element_classes', array( $this, 'display_default_byline'), 10, 3 );
+				add_filter( 'fm_element_classes', array( $this, 'display_default_byline' ), 10, 3 );
 			}
 
-			add_filter( 'template_include', array( $this, 'set_byline_template') );
+			add_filter( 'template_include', array( $this, 'set_byline_template' ) );
 
 			add_filter( 'get_avatar', array( $this, 'get_avatar' ), 20, 6 );
 
@@ -108,7 +108,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'website' => 'website',
 				'url' => 'website',
 				'user_email' => 'email',
-				'user_url'  =>  'website',
+				'user_url' => 'website',
 				'display_name' => 'post_title',
 				'first_name' => 'first_name',
 				'last_name' => 'last_name',
@@ -191,7 +191,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 			// About
 			$fm_about_children = array();
-			$fm_about_children[ 'bio' ] = new Fieldmanager_Textarea( __( 'Bio', 'fm_bylines' ), array() );
+			$fm_about_children['bio'] = new Fieldmanager_Textarea( __( 'Bio', 'fm_bylines' ), array() );
 
 			$fm_about_children = apply_filters( 'fm_bylines_filter_about_fields', $fm_about_children );
 
@@ -246,9 +246,9 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 			if ( ! empty( $object->post_type ) && $this->name == $object->post_type ) {
 				$templates = array();
-				$templates[] = "single-byline.php";
+				$templates[] = 'single-byline.php';
 				$templates[] = "single-{$object->post_type}.php";
-				$templates[] = "single.php";
+				$templates[] = 'single.php';
 
 				return get_query_template( 'single', $templates );
 			}
@@ -423,7 +423,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 
 				// Set our avatar args
 				$params = array(
-					'class' =>  'avatar avatar-' . (string) $size . ' photo',
+					'class' => 'avatar avatar-' . (string) $size . ' photo',
 				);
 				if ( ! empty( $args['alt'] ) ) {
 					$params['alt'] = $args['alt'];
@@ -529,7 +529,7 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 				'post_type' => $this->name,
 				'post_status' => 'publish',
 				'suppress_filters' => 'false',
-				'include' => $byline_ids
+				'include' => $byline_ids,
 			);
 			$args = wp_parse_args( $params, $defaults );
 
@@ -726,8 +726,6 @@ if ( !class_exists( 'FM_Bylines' ) ) {
 			$final_separator = apply_filters( 'fm_bylines_write_byline_final_separator', $final_separator );
 			$after = ( empty( $after ) ) ? '' : $after;
 			$after = apply_filters( 'fm_bylines_write_byline_after', $after );
-
-
 			$last = array_slice( $bylines, -1 );
 			$first = implode( esc_html( $separator ) . ' ', array_slice( $bylines, 0, -1 ) );
 			$both = array_filter( array_merge( array( $first ), $last ) );

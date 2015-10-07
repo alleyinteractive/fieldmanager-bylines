@@ -3,9 +3,11 @@
  * Setup Post Byline Type Support
  * Will add metaboxes to each post type that supports a byline type.
  */
+
 if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 	class FM_Bylines_Post extends FM_Bylines {
+
 		private static $instance;
 
 		// Default byline types supported by the theme
@@ -14,7 +16,9 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		private $context;
 
 		private function __construct() {
+
 			/* Don't do anything, needs to be initialized via instance() method */
+
 		}
 
 		public static function instance() {
@@ -26,6 +30,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		}
 
 		public function setup() {
+
 			$this->context = fm_get_context();
 
 			// Support byline types by default
@@ -42,11 +47,10 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 				// Set the column super early so other plugins can manipulate it using the same hook
 				add_filter( "manage_{$this->context[1]}_posts_columns", array( $this, 'set_posts_columns' ), 2, 2 );
 				add_action( "manage_{$this->context[1]}_posts_custom_column", array( $this, 'display_byline_type_column' ), 10, 2 );
-
 			}
 
-			add_filter( 'template_include', array( $this, 'set_byline_type_template') );
-			add_action( 'wp_loaded', array( $this, 'set_byline_rewrite_rules') );
+			add_filter( 'template_include', array( $this, 'set_byline_type_template' ) );
+			add_action( 'init', array( $this, 'set_byline_rewrite_rules' ) );
 		}
 
 		/**
@@ -155,10 +159,10 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 				$templates = array();
 				$templates[] = "author-{$object->post_name}.php";
 				$templates[] = "author-{$object->ID}.php";
-				$templates[] = "author.php";
-				$templates[] = "single-byline.php";
+				$templates[] = 'author.php';
+				$templates[] = 'single-byline.php';
 				$templates[] = "single-{$object->post_type}.php";
-				$templates[] = "single.php";
+				$templates[] = 'single.php';
 
 				return get_query_template( 'author', $templates );
 			}
