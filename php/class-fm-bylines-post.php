@@ -155,16 +155,39 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		public function set_byline_type_template( $template ) {
 			$object = get_queried_object();
 
-			if ( ! empty( $object->ID ) && $this->is_byline( 'author' ) ) {
+			if ( is_single() && ! empty( $object->ID ) && $this->name == $object->post_type ) {
 				$templates = array();
-				$templates[] = "author-{$object->post_name}.php";
-				$templates[] = "author-{$object->ID}.php";
-				$templates[] = 'author.php';
-				$templates[] = 'single-byline.php';
-				$templates[] = "single-{$object->post_type}.php";
-				$templates[] = 'single.php';
-
-				return get_query_template( 'author', $templates );
+				$type = $this->get_byline_type();
+				if ( ! empty( $type ) ) {
+					if ( 'author' == $type ) {
+						$templates = array(
+							"author-{$object->post_name}.php",
+							"author-{$object->ID}.php",
+							'author.php',
+							"single-{$object->post_type}-{$type}.php",
+							"single-{$object->post_type}.php",
+							'single.php',
+						);
+						return get_query_template( 'author', $templates );
+					} else {
+						$templates = array(
+							"single-{$object->post_type}-{$type}.php",
+							"single-{$object->post_type}.php",
+							'single.php',
+						);
+						return get_query_template( 'single', $templates );
+					}
+				}
+			} else if ( is_post_type_archive( $this->name ) ) {
+				$type = $this->get_byline_type();
+				if ( ! empty( $type ) ) {
+					$templates = array(
+						"archive-{$object->post_type}-{$type}.php",
+						"archive-{$object->post_type}.php",
+						'single.php',
+					);
+					return get_query_template( 'archive', $templates );
+				}
 			}
 
 			return $template;
@@ -188,8 +211,8 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 						$type . '/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
 						$type . '/page/([0-9]{1,})/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&paged=$matches[1]',
 					);
-					foreach ( $type_rewrites as $rewrite ) {
-						add_rewrite_rule( $rewrite, 'top' );
+					foreach ( $type_rewrites as $rule => $rewrite ) {
+						add_rewrite_rule( $rule, $rewrite, 'top' );
 					}
 				}
 			};
