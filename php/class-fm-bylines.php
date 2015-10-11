@@ -84,7 +84,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				'taxonomies' => array(),
 				'has_archive' => true,
 				'rewrite' => array( 'slug' => $this->slug, 'with_front' => false ),
-				'hierarchical' => true, // This is set to true so we can hook permalinks with byline types.
+				'hierarchical' => false,
 				'supports' => array( 'title', 'thumbnail' ),
 				'show_in_menu' => 'users.php',
 				'show_in_nav_menus' => false,
