@@ -1,5 +1,5 @@
 <?php
-if ( ! class_exists( "Plugin_Dependency" ) ) {
+if ( ! class_exists( 'Plugin_Dependency' ) ) {
 
 	class Plugin_Dependency {
 
@@ -25,7 +25,7 @@ if ( ! class_exists( "Plugin_Dependency" ) ) {
 		 * @params url $name optional
 		 * @return void
 		 */
-		public function __construct( $plugin_name, $dependency_name, $dependency_uri="" ) {
+		public function __construct( $plugin_name, $dependency_name, $dependency_uri = '' ) {
 			include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 			// Set the plugin defaults
@@ -47,19 +47,19 @@ if ( ! class_exists( "Plugin_Dependency" ) ) {
 		 */
 		public function verify() {
 			$plugin_uri = $this->info();
-			if( $plugin_uri === false ) {
+			if ( false === $plugin_uri ) {
 				// The plugin is not installed. Display the appropriate message and return false.
 				$this->verify_message = $this->install_message();
 				return false;
 			} else {
 				// Determine if the plugin is active
-				if( !is_plugin_active( $plugin_uri ) ) {
+				if ( ! is_plugin_active( $plugin_uri ) ) {
 					// The plugin is not active. Display the appropriate message and return false.
 					$this->verify_message = $this->activate_message();
 					return false;
 				} else {
 					// The plugin is installed and active.
-					$this->verify_message = "";
+					$this->verify_message = '';
 					return true;
 				}
 			}
@@ -81,7 +81,7 @@ if ( ! class_exists( "Plugin_Dependency" ) ) {
 		 */
 		private function activate_message() {
 			$plugin_file = $this->info();
-			if ( $plugin_file !== false ) {
+			if ( false !== $plugin_file ) {
 				return sprintf(
 					__( '<p style="font-family: sans-serif; font-size: 12px">%s<br>Please <a href="%s" target="_top">activate %s</a> and try again.</p>' ),
 					$this->dependency_message(),
@@ -101,17 +101,17 @@ if ( ! class_exists( "Plugin_Dependency" ) ) {
 			include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 
 			// See if the plugin is available on WordPress.org
-			$info = plugins_api( 'plugin_information', array('slug' => $this->dependency_uri ) );
+			$info = plugins_api( 'plugin_information', array( 'slug' => $this->dependency_uri ) );
 
-			$install_instructions = "";
-			if ( is_wp_error( $info ) && filter_var($this->dependency_uri, FILTER_VALIDATE_URL) ) {
+			$install_instructions = '';
+			if ( is_wp_error( $info ) && filter_var( $this->dependency_uri, FILTER_VALIDATE_URL ) ) {
 				// The plugin is not available from WordPress.org
 				$install_instructions = sprintf(
 					__( '<br>Please <a href="%s" target="_blank">download and install %s</a> and try again.' ),
 					$this->dependency_uri,
 					$this->dependency_name
 				);
-			} else if ( !is_wp_error( $info ) ) {
+			} else if ( ! is_wp_error( $info ) ) {
 				// The plugin is available from WordPress.org
 				$install_instructions = sprintf(
 					__( '<br>Please <a href="%s" target="_top">install %s</a> and try again.' ),
@@ -146,8 +146,8 @@ if ( ! class_exists( "Plugin_Dependency" ) ) {
 		 * @return mixed
 		 */
 		private function info() {
-			foreach( $this->installed_plugins as $plugin_url => $plugin_data ) {
-				if( $this->dependency_name == $plugin_data['Name'] ) {
+			foreach ( $this->installed_plugins as $plugin_url => $plugin_data ) {
+				if ( $this->dependency_name == $plugin_data['Name'] ) {
 					return $plugin_url;
 				}
 			}

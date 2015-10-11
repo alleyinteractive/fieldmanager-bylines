@@ -22,7 +22,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		}
 
 		public function setup() {
-			add_filter('the_author', array( $this, 'get_the_author' ) );
+			add_filter( 'the_author', array( $this, 'get_the_author' ) );
 			add_filter( 'is_multi_author', array( $this, 'is_multi_author' ) );
 
 			$keys = $this->byline_meta_keys();
@@ -32,6 +32,9 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 
 			add_filter( 'the_author_posts_link', array( $this, 'get_author_posts_link' ) );
 			add_filter( 'author_link', array( $this, 'get_author_link' ), 10, 3 );
+
+			// Remove traditional author rewrite rules
+			add_filter( 'author_rewrite_rules', array( $this, 'set_author_rewrite_rules' ) );
 
 			add_action( 'transition_post_status', array( $this, 'early_transition_post_status' ), 1, 3 );
 		}
@@ -56,7 +59,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 			$authors = $this->get_byline();
 			$display_name = '';
 			if ( ! empty( $authors ) ) {
-				$authors = wp_list_pluck( $authors, 'post_title'  );
+				$authors = wp_list_pluck( $authors, 'post_title' );
 				$display_name = implode( ', ', $authors );
 			}
 			return $display_name;
@@ -96,6 +99,13 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		public function early_transition_post_status( $new_status, $old_status, $post ) {
 			// Don't bother clearing the multi-author transient when a post status changes.
 			remove_action( 'transition_post_status', '__clear_multi_author_cache' );
+		}
+
+		/**
+		 * Remove default rewrite rules for authors
+		 */
+		public function set_author_rewrite_rules( $author_rewrite ) {
+			return array();
 		}
 	}
 }

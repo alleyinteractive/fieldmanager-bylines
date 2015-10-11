@@ -7,7 +7,7 @@
  */
 function fm_get_byline_ids( $post_id = null, $type = 'author' ) {
 	$fm_bylines = FM_Bylines();
-	if ( ! $post_id ) {
+	if ( empty( $post_id ) ) {
 		$post_id = get_the_ID();
 	}
 	return $fm_bylines->get_byline_ids( $post_id, $type );
@@ -22,6 +22,9 @@ function fm_get_byline_ids( $post_id = null, $type = 'author' ) {
  */
 function fm_get_byline( $post_id = null, $type = 'author', $args = array() ) {
 	$fm_bylines = FM_Bylines();
+	if ( empty( $post_id ) ) {
+		$post_id = get_the_ID();
+	}
 	return $fm_bylines->get_byline( $post_id, $type, $args );
 }
 
@@ -48,6 +51,9 @@ function fm_get_byline_posts( $byline_id, $type = 'author', $args = array() ) {
  */
 function fm_get_bylines_posts_links( $post_id = null, $type = 'author' ) {
 	$fm_bylines = FM_Bylines();
+	if ( empty( $post_id ) ) {
+		$post_id = get_the_ID();
+	}
 	return $fm_bylines->get_bylines_posts_links( $post_id, $type );
 }
 
@@ -72,7 +78,6 @@ function fm_get_byline_link( $byline_id, $type = 'author' ) {
  * @return string
  */
 function fm_get_byline_url( $byline_id, $type = 'author' ) {
-	// TODO: add in permalinks for different byline types. Currently only returns permalink
 	if ( ! empty( $byline_id ) ) {
 		$fm_bylines = FM_Bylines();
 		return $fm_bylines->get_byline_url( $byline_id, $type );
