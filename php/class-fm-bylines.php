@@ -14,6 +14,8 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		public $slug = 'byline';
 
+		public $avatar_size = 200;
+
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
 		}
@@ -31,6 +33,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			$this->slug = sanitize_title_with_dashes( apply_filters( 'fm_bylines_filter_rewrite_slug', $this->slug ) );
 
 			add_action( 'init', array( $this, 'setup_data_structure' ), 20 );
+			add_theme_support( 'post-thumbnails', array( $this->name ) );
 
 			// Add custom meta boxes
 			if ( is_admin() ) {
@@ -415,6 +418,9 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				}
 
 				if ( $display_default ) {
+					if ( empty( $size ) ) {
+						$size = $this->avatar_size;
+					}
 					$args['force_default'] = 'y';
 					$avatar = sprintf(
 						"<img alt='%s' src='%s' srcset='%s' class='%s' height='%d' width='%d' %s/>",
@@ -427,8 +433,9 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 						$args['extra_attr']
 			        );
 				} elseif ( has_post_thumbnail( $byline->ID ) ) {
-
-					if ( is_numeric( $size ) ) {
+					if ( empty( $size ) ) {
+						$size = array( $this->avatar_size, $this->avatar_size );
+					} elseif ( is_numeric( $size ) ) {
 						$size = array( $size, $size );
 					}
 					$avatar = get_the_post_thumbnail( $byline->ID, $size, $params );
