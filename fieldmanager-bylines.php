@@ -15,7 +15,7 @@ Author URI: http://www.alleyinteractive.com/
 
 require_once( dirname( __FILE__ ) . '/php/class-plugin-dependency.php' );
 
-function fm_bylines_init(){
+function fm_bylines_init() {
 	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines.php' );
 	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-post.php' );
 	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-author.php' );
@@ -23,12 +23,12 @@ function fm_bylines_init(){
 
 	add_action( 'wp_enqueue_scripts', 'fm_bylines_enqueue_assets' );
 }
-add_action('plugins_loaded', 'fm_bylines_init');
+add_action( 'plugins_loaded', 'fm_bylines_init' );
 
 function fm_bylines_dependency() {
 
 	$fm_bylines_dependency = new Plugin_Dependency( 'Fieldmanager', 'Fieldmanager', 'https://github.com/netaustin/wordpress-fieldmanager' );
-	if( ! $fm_bylines_dependency->verify() ) {
+	if ( ! $fm_bylines_dependency->verify() ) {
 		// Cease activation
 		die( $fm_bylines_dependency->message() );
 	}
