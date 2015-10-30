@@ -254,31 +254,25 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				$fm_context = $context[0];
 				$fm_context_type = $context[1];
 				$label = empty( $label ) ? fm_bylines_wordify_slug( $type ) : $label;
-				$defaults = array(
+
+				$args = array(
+					'default_value' => null,
 					'name' => 'fm_bylines_' . sanitize_title_with_dashes( $type ),
 					'limit' => 0,
 					'add_more_label' => __( 'Add another', 'fm_bylines' ),
 					'sortable' => true,
 					'label' => __( 'Name', 'fm_bylines' ),
-					'children' => array(
-						'byline_id' => new Fieldmanager_Autocomplete( array(
-							'default_value' => null,
-							'datasource' => new Fieldmanager_Datasource_Post( array(
-								'query_args' => array(
-									'post_type' => $this->name,
-									'no_found_rows' => true,
-									'ignore_sticky_posts' => true,
-									'post_status' => 'publish',
-									'suppress_filters' => false,
-								),
-							) ),
-						) ),
-						'fm_byline_type' => new Fieldmanager_Hidden( array( 'default_value' => sanitize_title_with_dashes( $type ) ) ),
-					),
+					'datasource' => new Fieldmanager_Datasource_Post( array(
+						'query_args' => array(
+							'post_type' => $this->name,
+							'no_found_rows' => true,
+							'ignore_sticky_posts' => true,
+							'post_status' => 'publish',
+							'suppress_filters' => false,
+						),
+					) ),
 				);
-
-				$fm_byline_box = new Fieldmanager_Group( wp_parse_args( $args, $defaults ) );
-
+				$fm_byline_box = new Fieldmanager_Autocomplete( $args );
 				if ( 'post' == $fm_context ) {
 					$fm_byline_box->add_meta_box( $label, $fm_context_type, apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_post_metabox_context', 'normal' ), apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_post_metabox_priority', 'default' ) );
 				} elseif ( 'term' == $fm_context ) {
@@ -302,16 +296,18 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 */
 		public function display_default_byline( $classes, $name, $field ) {
 			if ( ! empty( $field->data_id ) && get_post_type( $field->data_id ) != $this->name ) {
-				$pattern = '/^fm-fm_bylines_(.*)-(.*)-.*-\d$/';
+				$pattern = '/^fm-fm_bylines_(.*)-(\d+)$/';
 				preg_match( $pattern, $field->get_element_id(), $matches );
-				if ( 'byline_id' == $name && ! empty( $matches ) ) {
+				if ( ! empty( $matches ) ) {
 					$type = $matches[1];
 					$index = $matches[2];
-					// On new posts only, use default values.  This allows for empty bylines.
-					if ( absint( $index ) === 0 && get_post_status( $field->data_id ) === 'auto-draft' ) {
-						$field->default_value = ( apply_filters( "fm_bylines_{$type}_enable_user_mapping_defaults", $this->get_byline_user_mapping() ) ) ? $this->get_byline_user_mapping() : null;
-					} else {
-						$field->default_value = null;
+					if ( in_array( $type, fm_get_byline_types() ) ) {
+						// On new posts only, use default values.  This allows for empty bylines.
+						if ( absint( $index ) === 0 && get_post_status( $field->data_id ) === 'auto-draft' ) {
+							$field->default_value = ( apply_filters( "fm_bylines_{$type}_enable_user_mapping_defaults", $this->get_byline_user_mapping() ) ) ? $this->get_byline_user_mapping() : null;
+						} else {
+							$field->default_value = null;
+						}
 					}
 				}
 			}
@@ -335,21 +331,24 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 *
 		 */
 		public function save_byline_meta( $values, $object, $current_values ) {
-
+			$pattern = '/^fm_bylines_(.*)(_\d+)?$/';
 			// Check the byline type as this field is not added on the byline post type page.
-			if ( preg_match( '/fm_bylines_/', $object->name ) && get_post_type() != $this->name ) {
-				$post_id = get_the_ID();
-				foreach ( $current_values as $current_value ) {
-					if ( ! empty( $current_value['byline_id'] ) ) {
-						delete_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $current_value['fm_byline_type'] ) . '_' . $current_value['byline_id'] );
+			if ( preg_match( '/^fm_bylines_(.+)$/', $object->name, $matches ) && get_post_type() != $this->name ) {
+				$byline_type = $matches[1];
+				if ( in_array( $byline_type, fm_get_byline_types() ) ) {
+					$post_id = get_the_ID();
+					foreach ( $current_values as $current_value ) {
+						if ( ! empty( $current_value ) ) {
+							delete_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $byline_type ) . '_' . absint( $current_value ) );
+						}
 					}
-				}
 
-				foreach ( $values as $i => $value ) {
-					if ( empty( $value['byline_id'] ) || empty( $value['fm_byline_type'] ) ) {
-						unset( $values[ $i ] );
-					} else {
-						update_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $value['fm_byline_type'] ) . '_' . $value['byline_id'], true );
+					foreach ( $values as $i => $value ) {
+						if ( empty( $value ) ) {
+							unset( $values[ $i ] );
+						} else {
+							update_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $byline_type ) . '_' . absint( $value ), true );
+						}
 					}
 				}
 			}
@@ -369,7 +368,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 						$meta_key = 'fm_bylines_' . sanitize_title_with_dashes( $type );
 						$meta_data = get_post_meta( $post_id, $meta_key, true );
 						foreach ( $meta_data as $i => $data ) {
-							if ( ( empty( $data['byline_id'] ) || $data['byline_id'] == $byline_id ) && $data['fm_byline_type'] == $type ) {
+							if ( empty( $data ) || $data == $byline_id ) {
 								unset( $meta_data[ $i ] );
 							}
 						}
@@ -427,12 +426,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 						$args['extra_attr']
 			        );
 				} elseif ( has_post_thumbnail( $byline->ID ) ) {
-
 					if ( is_numeric( $size ) ) {
 						$size = array( $size, $size );
 					}
 					$avatar = get_the_post_thumbnail( $byline->ID, $size, $params );
-
 				}
 			}
 
@@ -535,7 +532,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			$post_meta = get_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $type ), true );
 
 			if ( ! empty( $post_meta ) && is_array( $post_meta ) ) {
-				return wp_list_pluck( $post_meta, 'byline_id' );
+				return $post_meta;
 			}
 			return array();
 		}
