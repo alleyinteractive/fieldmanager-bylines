@@ -123,9 +123,21 @@ function fm_get_the_byline_meta( $field, $byline_id ) {
 	return $fm_bylines->get_the_byline_meta( $meta_field, $byline_id );
 }
 
+/**
+ * Return the featured image associated with a byline
+ */
 function fm_get_byline_avatar( $byline_id, $size, $args ) {
 	$fm_bylines = FM_Bylines();
 	return $fm_bylines->get_byline_avatar( $byline_id, $size, $args );
+}
+
+/**
+ * Returns an array of valid byline types.
+ * @return array.
+ */
+function fm_get_byline_types() {
+	$fm_bylines_post = FM_Bylines_Post();
+	return $fm_bylines_post->byline_types;
 }
 
 /**
