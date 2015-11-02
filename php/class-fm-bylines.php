@@ -542,6 +542,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		/**
 		 * Get all the posts for a single byline.
+		 * @param int. $byline_id
+		 * @param string. $byline_type
+		 * @param array. $params
+		 * @return array.
 		 */
 		public function get_byline_posts( $byline_id, $type = 'author', $params = array() ) {
 			if ( ! empty( $byline_id ) ) {
@@ -553,6 +557,31 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				);
 				$args = wp_parse_args( $params, $defaults );
 				return get_posts( $args );
+			}
+			return false;
+		}
+
+		/**
+		 * Get WP Query for the posts for a single byline.
+		 * Use to create loops on single byline pages.
+		 * @param int. $byline_id
+		 * @param string. $byline_type
+		 * @param array. $params
+		 * @return object. WP_Query object.
+		 */
+		public function get_byline_posts_query( $byline_id, $type, $params = array() ) {
+			$byline_id = ( empty( $byline_id ) ) ? get_the_ID() : $byline_id;
+			$type = ( empty( $type ) ) ? $this->get_byline_type() : $type;
+
+			if ( ! empty( $byline_id ) && ! empty( $type ) ) {
+				$defaults = array(
+					'post_type' => array( 'post' ),
+					'post_status' => 'publish',
+					'meta_key' => 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_' . $byline_id,
+					'suppress_filters' => false,
+				);
+				$args = wp_parse_args( $params, $defaults );
+				return new WP_Query( $args );
 			}
 			return false;
 		}
