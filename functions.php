@@ -6,11 +6,10 @@
  * @return array
  */
 function fm_get_byline_ids( $post_id = null, $type = 'author' ) {
-	$fm_bylines = FM_Bylines();
 	if ( empty( $post_id ) ) {
 		$post_id = get_the_ID();
 	}
-	return $fm_bylines->get_byline_ids( $post_id, $type );
+	return FM_Bylines()->get_byline_ids( $post_id, $type );
 }
 
 /**
@@ -21,11 +20,10 @@ function fm_get_byline_ids( $post_id = null, $type = 'author' ) {
  * @return string
  */
 function fm_get_byline( $post_id = null, $type = 'author', $args = array() ) {
-	$fm_bylines = FM_Bylines();
 	if ( empty( $post_id ) ) {
 		$post_id = get_the_ID();
 	}
-	return $fm_bylines->get_byline( $post_id, $type, $args );
+	return FM_Bylines()->get_byline( $post_id, $type, $args );
 }
 
 /**
@@ -33,14 +31,21 @@ function fm_get_byline( $post_id = null, $type = 'author', $args = array() ) {
  * @param int $byline_id.  The byline guest user id.
  * @param string $type.
  * @param array $args.
- * @return mixed.  array of posts or false
+ * @return array.
  */
 function fm_get_byline_posts( $byline_id, $type = 'author', $args = array() ) {
-	if ( ! empty( $byline_id ) ) {
-		$fm_bylines = FM_Bylines();
-		return $fm_bylines->get_byline_posts( $byline_id, $type, $args );
-	}
-	return false;
+	return FM_Bylines()->get_byline_posts( $byline_id, $type, $args );
+}
+
+/**
+ * Get the WP Posts Query for a byline user.
+ * @param int $byline_id. Defaults to current displayed byline id.
+ * @param string $type. Defaults to current display byline type.
+ * @param array $args.
+ * @return mixed. WP Query object.
+ */
+function fm_get_byline_posts_query( $byline_id = null, $type = null, $args = array() ) {
+	return FM_Bylines()->get_byline_posts_query( $byline_id, $type, $args );
 }
 
 /**
@@ -50,11 +55,10 @@ function fm_get_byline_posts( $byline_id, $type = 'author', $args = array() ) {
  * @return string
  */
 function fm_get_bylines_posts_links( $post_id = null, $type = 'author' ) {
-	$fm_bylines = FM_Bylines();
 	if ( empty( $post_id ) ) {
 		$post_id = get_the_ID();
 	}
-	return $fm_bylines->get_bylines_posts_links( $post_id, $type );
+	return FM_Bylines()->get_bylines_posts_links( $post_id, $type );
 }
 
 /**
@@ -64,11 +68,7 @@ function fm_get_bylines_posts_links( $post_id = null, $type = 'author' ) {
  * @return string
  */
 function fm_get_byline_link( $byline_id, $type = 'author' ) {
-	if ( ! empty( $byline_id ) ) {
-		$fm_bylines = FM_Bylines();
-		return $fm_bylines->get_byline_link( $byline_id, $type );
-	}
-	return false;
+	return FM_Bylines()->get_byline_link( $byline_id, $type );
 }
 
 /**
@@ -77,12 +77,11 @@ function fm_get_byline_link( $byline_id, $type = 'author' ) {
  * @param int. byline_id
  * @return string
  */
-function fm_get_byline_url( $byline_id, $type = 'author' ) {
+function fm_get_byline_url( $byline_id = null, $type = 'author' ) {
 	if ( ! empty( $byline_id ) ) {
-		$fm_bylines = FM_Bylines();
-		return $fm_bylines->get_byline_url( $byline_id, $type );
+		return FM_Bylines()->get_byline_url( $byline_id, $type );
 	}
-	return false;
+	return;
 }
 
 /**
@@ -92,8 +91,7 @@ function fm_get_byline_url( $byline_id, $type = 'author' ) {
  * @param array
  */
 function fm_add_byline_meta_box( $type = 'author', $label = null, $args = array() ) {
-	$fm_bylines = FM_Bylines();
-	return $fm_bylines->add_byline_meta_box( $type, $label, $args );
+	return FM_Bylines()->add_byline_meta_box( $type, $label, $args );
 }
 
 /**
@@ -103,8 +101,7 @@ function fm_add_byline_meta_box( $type = 'author', $label = null, $args = array(
  * @return boolean
  */
 function fm_is_byline( $type = 'author', $byline_id = null ) {
-	$fm_bylines = FM_Bylines();
-	return $fm_bylines->is_byline( $type, $byline_id );
+	return FM_Bylines()->is_byline( $type, $byline_id );
 }
 
 /**
@@ -114,18 +111,16 @@ function fm_is_byline( $type = 'author', $byline_id = null ) {
  * @return mixed
  */
 function fm_get_the_byline_meta( $field, $byline_id ) {
-	$fm_bylines = FM_Bylines();
 	if ( in_array( $field, array( 'about', 'contact_info', 'names' ) ) ) {
 		$meta_field = 'fm_bylines_' . $field;
 	} else {
 		$meta_field = $field;
 	}
-	return $fm_bylines->get_the_byline_meta( $meta_field, $byline_id );
+	return FM_Bylines()->get_the_byline_meta( $meta_field, $byline_id );
 }
 
 function fm_get_byline_avatar( $byline_id, $size, $args ) {
-	$fm_bylines = FM_Bylines();
-	return $fm_bylines->get_byline_avatar( $byline_id, $size, $args );
+	return FM_Bylines()->get_byline_avatar( $byline_id, $size, $args );
 }
 
 /**
