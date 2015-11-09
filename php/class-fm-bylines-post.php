@@ -42,8 +42,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			if ( is_admin() ) {
 				if ( 'post' === $this->context[0] ) {
 					// Disable bylines on attachments by default.
-					$allow_attachment_bylines = apply_filters( 'fm_bylines_on_attachments', false );
-					if ( 'attachment' != $this->context[1] || ( $allow_attachment_bylines && 'attachment' == $this->context[1] ) ) {
+					if ( 'attachment' != $this->context[1] || apply_filters( 'fm_bylines_on_attachments', false ) ) {
 						add_action( 'do_meta_boxes', array( $this, 'remove_meta_boxes' ) );
 						add_action( "fm_{$this->context[0]}_{$this->context[1]}", array( $this, 'add_meta_boxes' ) );
 					}

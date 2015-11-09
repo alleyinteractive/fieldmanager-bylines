@@ -548,17 +548,14 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * @return array.
 		 */
 		public function get_byline_posts( $byline_id, $type = 'author', $params = array() ) {
-			if ( ! empty( $byline_id ) ) {
-				$defaults = array(
-					'post_type' => array( 'post' ),
-					'post_status' => 'publish',
-					'meta_key' => 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_' . $byline_id,
-					'suppress_filters' => false,
-				);
-				$args = wp_parse_args( $params, $defaults );
-				return get_posts( $args );
-			}
-			return false;
+			$defaults = array(
+				'post_type' => array( 'post' ),
+				'post_status' => 'publish',
+				'meta_key' => 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_' . $byline_id,
+				'suppress_filters' => false,
+			);
+			$args = wp_parse_args( $params, $defaults );
+			return get_posts( $args );
 		}
 
 		/**
@@ -569,7 +566,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * @param array. $params
 		 * @return object. WP_Query object.
 		 */
-		public function get_byline_posts_query( $byline_id, $type, $params = array() ) {
+		public function get_byline_posts_query( $byline_id = null, $type = null, $params = array() ) {
 			$byline_id = ( empty( $byline_id ) ) ? get_the_ID() : $byline_id;
 			$type = ( empty( $type ) ) ? $this->get_byline_type() : $type;
 
@@ -583,7 +580,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				$args = wp_parse_args( $params, $defaults );
 				return new WP_Query( $args );
 			}
-			return false;
+			return new WP_Query();
 		}
 
 		/**
@@ -699,7 +696,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * @param int. byline_id.
 		 * @return string
 		 */
-		public function get_byline_url( $byline_id, $type = 'author' ) {
+		public function get_byline_url( $byline_id = null, $type = 'author' ) {
 			if ( ! empty( $byline_id ) && $this->name == get_post_type( $byline_id ) ) {
 				// It's possible this might be called before theme setup. So make sure we have the right slug here.
 				$this->slug = sanitize_title_with_dashes( apply_filters( 'fm_bylines_filter_rewrite_slug', $this->slug ) );
