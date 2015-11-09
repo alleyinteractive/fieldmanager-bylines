@@ -41,8 +41,12 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 			if ( is_admin() ) {
 				if ( 'post' === $this->context[0] ) {
-					add_action( 'do_meta_boxes', array( $this, 'remove_meta_boxes' ) );
-					add_action( "fm_{$this->context[0]}_{$this->context[1]}", array( $this, 'add_meta_boxes' ) );
+					// Disable bylines on attachments by default.
+					$allow_attachment_bylines = apply_filters( 'fm_bylines_on_attachments', false );
+					if ( 'attachment' != $this->context[1] || ( $allow_attachment_bylines && 'attachment' == $this->context[1] ) ) {
+						add_action( 'do_meta_boxes', array( $this, 'remove_meta_boxes' ) );
+						add_action( "fm_{$this->context[0]}_{$this->context[1]}", array( $this, 'add_meta_boxes' ) );
+					}
 				}
 				// Set the column super early so other plugins can manipulate it using the same hook
 				add_filter( "manage_{$this->context[1]}_posts_columns", array( $this, 'set_posts_columns' ), 2, 2 );
@@ -94,7 +98,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		 * @return void
 		 */
 		public function add_meta_boxes() {
-			foreach ( $this->byline_types  as $type ) {
+			foreach ( $this->byline_types as $type ) {
 				if ( $this->post_type_supports_byline( $this->context[1], $type ) ) {
 					fm_add_byline_meta_box( $type );
 				}
