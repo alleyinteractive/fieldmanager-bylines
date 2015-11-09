@@ -44,6 +44,18 @@ function fm_get_byline_posts( $byline_id, $type = 'author', $args = array() ) {
 }
 
 /**
+ * Get the WP Posts Query for a byline user.
+ * @param int $byline_id. Defaults to current displayed byline id.
+ * @param string $type. Defaults to current display byline type.
+ * @param array $args.
+ * @return mixed. WP Query object or false.
+ */
+function fm_get_byline_posts_query( $byline_id = null, $type = 'author', $args = array() ) {
+	$fm_bylines = FM_Bylines();
+	return $fm_bylines->get_byline_posts_query( $byline_id, $type, $args );
+}
+
+/**
  * Get the html byline url for all bylines of a given type for a single post
  * @param int, post_id
  * @param string. type
