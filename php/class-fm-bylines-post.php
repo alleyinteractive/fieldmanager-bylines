@@ -184,9 +184,10 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			} else if ( is_post_type_archive( $this->name ) ) {
 				$type = $this->get_byline_type();
 				if ( ! empty( $type ) ) {
+					$post_type = empty( $object->post_type ) ? $this->name : $object->post_type;
 					$templates = array(
-						"archive-{$object->post_type}-{$type}.php",
-						"archive-{$object->post_type}.php",
+						"archive-{$post_type}-{$type}.php",
+						"archive-{$post_type}.php",
 						'single.php',
 					);
 					return get_query_template( 'archive', $templates );
