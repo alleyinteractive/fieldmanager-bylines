@@ -54,6 +54,9 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 			add_filter( 'template_include', array( $this, 'set_byline_type_template' ) );
 			add_action( 'init', array( $this, 'set_byline_rewrite_rules' ) );
+
+			// Archive titles should display type
+			add_filter( 'wp_title_parts', array( $this, 'set_archive_title' ) );
 		}
 
 		/**
@@ -195,6 +198,25 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			}
 
 			return $template;
+		}
+
+		/**
+		 * If we are on a byline type archive, set the title correctly
+		 */
+		public function set_archive_title( $title_parts ) {
+			if ( is_post_type_archive( $this->name ) ) {
+				$object = get_queried_object();
+				if ( ! empty( $object->label ) && $title_parts[0] == $object->label ) {
+					$type = $this->get_byline_type();
+					if ( ! empty( $type ) ) {
+						$title = fm_bylines_wordify_slug( $type );
+					} else {
+						$title = fm_bylines_wordify_slug( apply_filters( 'fm_bylines_filter_rewrite_slug', $this->slug ) );
+					}
+					$title_parts[0] = apply_filters( 'fm_bylines_filter_archive_title', $title );
+				}
+			}
+			return $title_parts;
 		}
 
 		/**
