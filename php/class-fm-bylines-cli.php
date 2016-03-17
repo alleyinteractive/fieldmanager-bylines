@@ -6,11 +6,13 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 	/**
 	 * Migrate Co-Authors Plus Guest Authors and linked accounts to FM Bylines
 	 *
+	 * @subcommand migrate_coauthors
+	 * @synopsis [--cleardata]
 	 */
 	public function migrate_coauthors( $args, $assoc_args ) {
 		global $coauthors_plus;
-		// Determine if this is in simulation mode
-		if ( $assoc_args['simulate'] ) {
+		// Clear the legacy CAP data
+		if ( $assoc_args['cleardata'] ) {
 			$clear_data = true;
 		} else {
 			$clear_data = false;
