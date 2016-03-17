@@ -10,8 +10,14 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		private static $instance;
 
+		/**
+		 * The post type name
+		 */
 		public $name = 'byline';
 
+		/**
+		 * Slug used for rewrites
+		 */
 		public $slug = 'byline';
 
 		private function __construct() {
@@ -345,11 +351,14 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 					}
 				}
 
+				$order = 1;
 				foreach ( $values as $i => $value ) {
 					if ( empty( $value['byline_id'] ) || empty( $value['fm_byline_type'] ) ) {
 						unset( $values[ $i ] );
 					} else {
-						update_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $value['fm_byline_type'] ) . '_' . $value['byline_id'], true );
+						// We set the boolean as the order. This might come in handy somewhere.
+						update_post_meta( $post_id, 'fm_bylines_' . sanitize_title_with_dashes( $value['fm_byline_type'] ) . '_' . $value['byline_id'], $order );
+						$order++;
 					}
 				}
 			}

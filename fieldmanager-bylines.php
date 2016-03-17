@@ -21,6 +21,10 @@ function fm_bylines_init() {
 	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-author.php' );
 	require_once( dirname( __FILE__ ) . '/functions.php' );
 
+	if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-cli.php' );
+	}
+
 	add_action( 'wp_enqueue_scripts', 'fm_bylines_enqueue_assets' );
 }
 add_action( 'plugins_loaded', 'fm_bylines_init' );
