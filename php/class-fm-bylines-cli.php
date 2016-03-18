@@ -244,7 +244,6 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 									foreach ( $posts as $post ) {
 										// Check that the byline is empty, then add it.
 										$byline_set = get_post_meta( $post->ID, 'fm_bylines_author_' . (string) $byline_id, true );
-										print_r( $byline_set );
 										if ( empty( $byline_set ) ) {
 											// Add the byline to this post.
 											$current_bylines = empty( get_post_meta( $post->ID, 'fm_bylines_author', true ) ) ? array() : get_post_meta( $post->ID, 'fm_bylines_author', true );
@@ -266,6 +265,67 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 				}
 			}
 			WP_CLI::success( 'Migration complete' );
+		}
+	}
+
+
+
+	/**
+	 * Migrate Post Authors to Bylines
+	 *
+	 * @subcommand migrate_post_authors
+	 */
+	public function migrate_post_authors( $args, $assoc_args ) {
+		global $coauthors_plus;
+		// Particular Post Type to Loop Over
+		if ( ! empty( $assoc_args['post_type'] ) ) {
+			$post_type = $assoc_args['post_type'];
+		} else {
+			$post_type = 'post';
+		}
+
+		// Get all the posts
+		$offset = 0;
+		while ( ! isset( $complete ) ) {
+			$posts = get_posts(
+				array(
+					'posts_per_page' => 10,
+					'post_type' => $post_type,
+					'offset' => $offset,
+					'include' => array( '168077' ),
+					'numberposts' => 1,
+				)
+			);
+			print_r( $posts );
+			$offset += 10;
+			if ( ! empty( $posts ) ) {
+				foreach ( $posts as $post ) {
+					// Check that the byline is empty, then add it.
+					$byline_set = get_post_meta( $post->ID, 'fm_bylines_author', true );
+					print_r( $byline_set );
+					if ( empty( $byline_set ) ) {
+						// Check for a CAP.
+						$terms = wp_get_post_terms( $post->ID, $coauthors_plus->coauthor_taxonomy, $args );
+						print_r( $terms );
+						// If CAP exists, get attached Byline.
+
+						// If CAP doesnt exists, get User and look for attached Byline.
+
+
+						// Add the byline to this post.
+						// $new_byline_entry = array(
+						// 	'byline_id' => $byline_id,
+						// 	'fm_byline_type' => 'author',
+						// );
+						// $current_bylines[] = $new_byline_entry;
+						// update_post_meta( $post->ID, 'fm_bylines_author', $current_bylines );
+						// update_post_meta( $post->ID, 'fm_bylines_author_' . $byline_id, count( $current_bylines ) );
+					}
+					$complete = true;
+				}
+			} else {
+				$complete = true;
+			}
 		}
 	}
 }
