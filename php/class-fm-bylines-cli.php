@@ -151,5 +151,122 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 		}
 		WP_CLI::success( 'Migration complete' );
 	}
+
+
+	/**
+	 * Migrate WP Users to FM Bylines
+	 *
+	 * @subcommand migrate_wp_users
+	 */
+	public function migrate_wp_users( $args, $assoc_args ) {
+
+		$wp_users = get_users( 'number=1000' );
+		if ( ! is_wp_error( $wp_users ) && ! empty( $wp_users ) ) {
+
+			WP_CLI::line( 'Migrating WP users to bylines:' );
+
+			foreach ( $wp_users as $user ) {
+				$user_data = $user->data;
+				echo 'Migrating user: ' . $user->data->display_name . "\n";
+
+				// Check to see that the user has published posts.
+				$args = array(
+					'author' => $user_data->ID,
+				);
+				$user_posts = get_posts( $args );
+				if ( ! empty( $user_posts[0]->ID ) ) {
+					// Check by user_id to see if a byline exists for this WP User already.
+					$args = array(
+						'post_type' => FM_Bylines()->name,
+						'meta_key' => 'fm_bylines_user_mapping',
+						'meta_value' => $user_data->ID,
+						'post_status' => 'publish',
+						'numberposts' => 1,
+					);
+					$byline_post = get_posts( $args );
+
+					if ( empty( $byline_post[0]->ID ) ) {
+						// Also check by name to see if a byline exists for this WP User already.
+						$byline_slug = sanitize_title( $user_data->display_name );
+						$args = array(
+							'post_type' => FM_Bylines()->name,
+							'name' => $byline_slug,
+							'post_status' => 'publish',
+							'numberposts' => 1,
+						);
+						$byline_post = get_posts( $args );
+
+						if ( empty( $byline_post[0]->ID ) ) {
+							// Create a byline post.
+							$byline_args = array(
+								'post_title' => $user_data->display_name,
+								'post_name' => $byline_slug,
+								'post_type' => FM_Bylines()->name,
+								'post_status' => 'publish',
+							);
+							$byline_id = wp_insert_post( $byline_args );
+							if ( is_wp_error( $byline_id ) || empty( $byline_id ) ) {
+								WP_CLI::line( "Falied to insert byline: {$byline_slug}" );
+							} else {
+								// Link the WP User to the Byline.
+								add_post_meta( $byline_id, 'fm_bylines_user_mapping', $user_data->ID );
+
+								// Add meta data.
+								update_post_meta( $byline_id, 'fm_bylines_contact_info', array(
+									'email' => $user_data->user_email,
+									'website' => ( ! empty( $user_data->user_url ) && $user_data->user_url != 'http://' ) ? $user_data->user_url : '',
+									'twitter' => '',
+									'linkedin' => '',
+								) );
+
+								$bio = get_the_author_meta( 'description', $user_data->ID );
+								update_post_meta( $byline_id, 'fm_bylines_about', array(
+									'bio' => ! empty( $bio ) ? $bio : '',
+									'short-bio' => '',
+								) );
+							}
+						} else {
+							$byline_id = $byline_post[0]->ID;
+						}
+						if ( ! empty( $byline_id ) ) {
+							// Loop through all the posts from that user and apply the byline.
+							$offset = 0;
+							while ( ! isset( $complete ) ) {
+								$posts = get_posts(
+									array(
+										'posts_per_page'   => 10,
+										'offset' => $offset,
+										'author' => $user_data->ID,
+									)
+								);
+								$offset += 10;
+								if ( ! empty( $posts ) ) {
+									foreach ( $posts as $post ) {
+										// Check that the byline is empty, then add it.
+										$byline_set = get_post_meta( $post->ID, 'fm_bylines_author_' . (string) $byline_id, true );
+										print_r( $byline_set );
+										if ( empty( $byline_set ) ) {
+											// Add the byline to this post.
+											$current_bylines = empty( get_post_meta( $post->ID, 'fm_bylines_author', true ) ) ? array() : get_post_meta( $post->ID, 'fm_bylines_author', true );
+											$new_byline_entry = array(
+												'byline_id' => $byline_id,
+												'fm_byline_type' => 'author',
+											);
+											$current_bylines[] = $new_byline_entry;
+											update_post_meta( $post->ID, 'fm_bylines_author', $current_bylines );
+											update_post_meta( $post->ID, 'fm_bylines_author_' . $byline_id, count( $current_bylines ) );
+										}
+									}
+								} else {
+									$complete = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			WP_CLI::success( 'Migration complete' );
+		}
+	}
 }
 
