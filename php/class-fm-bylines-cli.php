@@ -109,14 +109,14 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						$objects = get_objects_in_term( $cap_term->term_id, $coauthors_plus->coauthor_taxonomy );
 						foreach ( $objects as $object_id ) {
 							if ( get_post_type( $object_id ) !== $coauthors_plus->guest_authors->post_type ) {
-								$current_bylines = empty( get_post_meta( $byline_id, 'fm_bylines_author', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_author', true );
+								$current_bylines = empty( get_post_meta( $object_id, 'fm_bylines_' . $coauthors_plus->coauthor_taxonomy, true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_author', true );
 								$new_byline_entry = array(
 									'byline_id' => $byline_id,
 									'fm_byline_type' => $coauthors_plus->coauthor_taxonomy,
 								);
 								$current_bylines[] = $new_byline_entry;
-								update_post_meta( $byline_id, 'fm_bylines_' . $coauthors_plus->coauthor_taxonomy, $current_bylines );
-								update_post_meta( $byline_id, 'fm_bylines_' . $coauthors_plus->coauthor_taxonomy . '_' . $byline_id, count( $current_bylines ) );
+								update_post_meta( $object_id, 'fm_bylines_' . $coauthors_plus->coauthor_taxonomy, $current_bylines );
+								update_post_meta( $object_id, 'fm_bylines_' . $coauthors_plus->coauthor_taxonomy . '_' . $byline_id, count( $current_bylines ) );
 							}
 
 							// Clean legacy data. Don't delete by default.
