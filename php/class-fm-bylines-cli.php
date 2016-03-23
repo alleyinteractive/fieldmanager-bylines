@@ -89,7 +89,10 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						}
 						if ( ! empty( $mapped_user->name ) ) {
 							if ( empty( $byline_display_name ) || strpos( $byline_display_name, '-' ) !== false ) {
-								$byline_display_name = $mapped_user->name;
+								$byline_display_name = $mapped_user->display_name;
+								if ( empty( $byline_display_name ) ) {
+									$byline_display_name = $mapped_user->name;
+								}
 							}
 						}
 						if ( empty( $byline_display_name ) ) {
