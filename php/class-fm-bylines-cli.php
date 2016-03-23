@@ -285,6 +285,8 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 								}
 							}
 						}
+					} else {
+						$byline_id = $byline_post[0]->ID;
 					}
 					// Update the byline data from the user.
 					$byline_contact_info = empty( get_post_meta( $byline_id, 'fm_bylines_contact_info', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_contact_info', true );
