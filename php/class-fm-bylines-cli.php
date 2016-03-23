@@ -29,6 +29,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					$byline_slug = false;
 					$byline_post = false;
 					$objects = false;
+					$byline_display_name = false;
 
 					// Parse the author data out of the CAP description.
 					$cap_data = explode( ' ', $cap_term->description );
@@ -85,9 +86,11 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						// Generate the name of the byline.
 						if ( ! empty( $cap_meta['cap-display_name'][0] ) ) {
 							$byline_display_name = $cap_meta['cap-display_name'][0];
-						} elseif ( ! empty( $mapped_user->name ) ) {
+						}
+						if ( ! empty( $mapped_user->name ) && strpos( $byline_display_name, '-' ) !== false ) {
 							$byline_display_name = $mapped_user->name;
-						} else {
+						}
+						if ( ! empty( $byline_display_name ) ) {
 							$byline_display_name = $cap_term->slug;
 						}
 
