@@ -206,8 +206,15 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 	 * Migrate WP Users to FM Bylines
 	 *
 	 * @subcommand migrate_wp_users
+	 * @synopsis [--batch_size]
 	 */
 	public function migrate_wp_users( $args, $assoc_args ) {
+		// Batch size.
+		if ( ! empty( $assoc_args['batch_size'] ) ) {
+			$batch_size = (int) $assoc_args['batch_size'];
+		} else {
+			$batch_size = 10;
+		}
 
 		$wp_users = get_users( 'number=1000' );
 		if ( ! is_wp_error( $wp_users ) && ! empty( $wp_users ) ) {
@@ -283,12 +290,12 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 							while ( ! isset( $complete ) ) {
 								$posts = get_posts(
 									array(
-										'posts_per_page'   => 10,
+										'posts_per_page' => $batch_size,
 										'offset' => $offset,
 										'author' => $user_data->ID,
 									)
 								);
-								$offset += 10;
+								$offset += $batch_size;
 								if ( ! empty( $posts ) ) {
 									foreach ( $posts as $post ) {
 										// Check that the byline is empty, then add it.
