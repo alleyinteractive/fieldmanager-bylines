@@ -87,10 +87,12 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						if ( ! empty( $cap_meta['cap-display_name'][0] ) ) {
 							$byline_display_name = $cap_meta['cap-display_name'][0];
 						}
-						if ( ! empty( $mapped_user->name ) && strpos( $byline_display_name, '-' ) !== false ) {
-							$byline_display_name = $mapped_user->name;
+						if ( ! empty( $mapped_user->name ) ) {
+							if ( empty( $byline_display_name ) || strpos( $byline_display_name, '-' ) !== false ) {
+								$byline_display_name = $mapped_user->name;
+							}
 						}
-						if ( ! empty( $byline_display_name ) ) {
+						if ( empty( $byline_display_name ) ) {
 							$byline_display_name = $cap_term->slug;
 						}
 
