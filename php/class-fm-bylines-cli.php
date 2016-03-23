@@ -236,7 +236,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 
 					if ( empty( $byline_post[0]->ID ) ) {
 						// Also check by name to see if a byline exists for this WP User already.
-						$byline_slug = sanitize_title( $user_data->display_name );
+						$byline_slug = sanitize_title_with_dashes( $user_data->display_name );
 						$args = array(
 							'post_type' => FM_Bylines()->name,
 							'name' => $byline_slug,
