@@ -11,7 +11,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 	 */
 	public function migrate_coauthors( $args, $assoc_args ) {
 		global $coauthors_plus;
-		// Clear the legacy CAP data
+		// Clear the legacy CAP data.
 		if ( isset( $assoc_args['cleardata'] ) ) {
 			$clear_data = true;
 		} else {
@@ -61,7 +61,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					}
 
 					// No mapped user, lets check by email.
-					if ( ! empty( $mapped_user ) ) {
+					if ( empty( $mapped_user ) ) {
 						$mapped_user = get_user_by( 'email', $cap_email );
 					}
 
@@ -76,7 +76,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					$byline_post = get_posts( $args );
 
 					// Check for byline by mapped user.
-					if ( empty( $byline_post[0]->ID ) && ! empty( $mapped_user ) ) {
+					if ( empty( $byline_post[0]->ID ) && ! empty( $mapped_user->ID ) ) {
 						$args = array(
 							'post_type' => FM_Bylines()->name,
 							'meta_key' => 'fm_bylines_user_mapping',
@@ -84,7 +84,6 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 							'post_status' => 'publish',
 							'numberposts' => 1,
 						);
-						print_r( $args );
 						$byline_post = get_posts( $args );
 					}
 
@@ -127,8 +126,13 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 								'short-bio' => ! empty( $cap_meta['cap-shortbio'][0] ) ? $cap_meta['cap-shortbio'][0] : '',
 							) );
 
-							if ( ! empty( $mapped_user ) ) {
+							if ( ! empty( $mapped_user->ID ) ) {
 								update_post_meta( $byline_id, 'fm_bylines_user_mapping', $mapped_user->ID );
+							}
+
+							// Update CAP post with Bylines ID.
+							if ( ! empty( $cap_post[0]->ID ) && ! empty( $byline_id ) ) {
+								update_post_meta( $cap_post[0]->ID, 'fm_bylines_id', $byline_id );
 							}
 						} else {
 							WP_CLI::line( "Falied to insert byline: {$byline_slug}" );
@@ -157,7 +161,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						}
 					}
 
-					// Update posts so byline authors reflect CAP authors
+					// Update posts so byline authors reflect CAP authors.
 					$objects = get_objects_in_term( $cap_term->term_id, $coauthors_plus->coauthor_taxonomy );
 					foreach ( $objects as $object_id ) {
 						if ( get_post_type( $object_id ) !== $coauthors_plus->guest_authors->post_type ) {
@@ -313,58 +317,116 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 		}
 	}
 
-
-
 	/**
 	 * Migrate Post Authors to Bylines
 	 *
-	 * @subcommand migrate_post_authors
+	 * @subcommand migrate_posts_author
+	 * @synopsis [--post_type] [--batch_size]
 	 */
-	public function migrate_post_authors( $args, $assoc_args ) {
+	public function migrate_posts_authors( $args, $assoc_args ) {
 		global $coauthors_plus;
-		// Particular Post Type to Loop Over
+		// Particular Post Type to Loop Over.
 		if ( ! empty( $assoc_args['post_type'] ) ) {
 			$post_type = $assoc_args['post_type'];
 		} else {
 			$post_type = 'post';
 		}
 
-		// Get all the posts
+		// Batch size.
+		if ( ! empty( $assoc_args['batch_size'] ) ) {
+			$batch_size = (int) $assoc_args['batch_size'];
+		} else {
+			$batch_size = 10;
+		}
+
+		// Setup arrays for storing in memory for large jobs.
+		$user_byline_map = array();
+		$cap_byline_map = array();
+
+		// Get all the posts.
 		$offset = 0;
 		while ( ! isset( $complete ) ) {
 			$posts = get_posts(
 				array(
-					'posts_per_page' => 10,
+					'posts_per_page' => $batch_size,
 					'post_type' => $post_type,
 					'offset' => $offset,
-					'include' => array( '168077' ),
-					'numberposts' => 1,
 				)
 			);
-			print_r( $posts );
-			$offset += 10;
+			$offset += $batch_size;
 			if ( ! empty( $posts ) ) {
 				foreach ( $posts as $post ) {
+					$byline_id = false;
+
 					// Check that the byline is empty, then add it.
 					$byline_set = get_post_meta( $post->ID, 'fm_bylines_author', true );
-					print_r( $byline_set );
+
 					if ( empty( $byline_set ) ) {
 						// Check for a CAP.
-						$terms = wp_get_post_terms( $post->ID, $coauthors_plus->coauthor_taxonomy, $args );
-						print_r( $terms );
+						$cap_terms = wp_get_post_terms( $post->ID, $coauthors_plus->coauthor_taxonomy, $args );
+
 						// If CAP exists, get attached Byline.
+						if ( ! empty( $cap_terms[0]->term_id ) ) {
+							// Look up in memory first.
+							if ( ! empty( $cap_byline_map[ $cap_terms[0]->term_id ] ) ) {
+								$byline_id = $cap_byline_map[ $cap_terms[0]->term_id ];
+							} else {
+								$cap_term = get_term_by( 'id' , $cap_terms[0]->term_id, $coauthors_plus->coauthor_taxonomy );
 
-						// If CAP doesnt exists, get User and look for attached Byline.
+								// Check if there is CAP Post.
+								$args = array(
+									'post_type' => $coauthors_plus->guest_authors->post_type,
+									'name' => $cap_term->slug,
+									'post_status' => 'publish',
+									'numberposts' => 1,
+								);
+								$cap_post = get_posts( $args );
+								if ( ! empty( $cap_post[0]->ID ) ) {
+									$cap_meta = get_post_meta( $cap_post[0]->ID );
+								} else {
+									$cap_meta = false;
+								}
 
+								if ( ! empty( $cap_meta['fm_bylines_id'][0] ) ) {
+									$byline_id = (int) $cap_meta['fm_bylines_id'][0];
+									// Store in memory.
+									$cap_byline_map[ $cap_terms[0]->term_id ] = $byline_id;
+								}
+							}
+						}
+
+						// If CAP doesnt exists, get User and look for attached Byline with that author.
+						if ( empty( $byline_id ) ) {
+							if ( ! empty( $user_byline_map[ $post->post_author ] ) ) {
+								$byline_id = $cap_byline_map[ $post->post_author ];
+							} else {
+								$args = array(
+									'post_type' => FM_Bylines()->name,
+									'meta_key' => 'fm_bylines_user_mapping',
+									'meta_value' => $post->post_author,
+									'post_status' => 'publish',
+									'numberposts' => 1,
+								);
+								$byline_post = get_posts( $args );
+								if ( ! empty( $byline_post[0]->ID ) ) {
+									$byline_id = $byline_post[0]->ID;
+									// Store in memory.
+									$cap_byline_map[ $post->post_author ] = $byline_id;
+								}
+							}
+						}
 
 						// Add the byline to this post.
-						// $new_byline_entry = array(
-						// 	'byline_id' => $byline_id,
-						// 	'fm_byline_type' => 'author',
-						// );
-						// $current_bylines[] = $new_byline_entry;
-						// update_post_meta( $post->ID, 'fm_bylines_author', $current_bylines );
-						// update_post_meta( $post->ID, 'fm_bylines_author_' . $byline_id, count( $current_bylines ) );
+						if ( ! empty( $byline_id ) ) {
+							$current_bylines = array();
+							$new_byline_entry = array(
+								'byline_id' => $byline_id,
+								'fm_byline_type' => 'author',
+							);
+							$current_bylines[] = $new_byline_entry;
+							update_post_meta( $post->ID, 'fm_bylines_author', $current_bylines );
+							update_post_meta( $post->ID, 'fm_bylines_author_' . $byline_id, count( $current_bylines ) );
+						}
 					}
 					$complete = true;
 				}
