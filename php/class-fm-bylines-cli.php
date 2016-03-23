@@ -253,32 +253,6 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						}
 
 						if ( ! empty( $byline_id ) ) {
-							// Update the byline data from the user.
-							$byline_contact_info = empty( get_post_meta( $byline_id, 'fm_bylines_contact_info', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_contact_info', true );
-							if ( empty( $byline_contact_info['email'] ) ) {
-								$byline_contact_info['email'] = $user_data->user_email;
-							}
-							if ( empty( $byline_contact_info['website'] ) ) {
-								$byline_contact_info['website'] = ( ! empty( $user_data->user_url ) && $user_data->user_url != 'http://' ) ? $user_data->user_url : '';
-							}
-							if ( empty( $byline_contact_info['twitter'] ) ) {
-								$byline_contact_info['twitter'] = '';
-							}
-							if ( empty( $byline_contact_info['linkedin'] ) ) {
-								$byline_contact_info['linkedin'] = '';
-							}
-							// Add meta data.
-							update_post_meta( $byline_id, 'fm_bylines_contact_info', $byline_contact_info );
-
-							$bio = get_the_author_meta( 'description', $user_data->ID );
-							$byline_about = empty( get_post_meta( $byline_id, 'fm_bylines_about', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_about', true );
-							if ( empty( $byline_about['bio'] ) ) {
-								$byline_about['bio'] = ! empty( $bio ) ? $bio : '';
-							}
-							if ( empty( $byline_about['short-bio'] ) ) {
-								$byline_about['short-bio'] = '';
-							}
-
 							// Loop through all the posts from that user and apply the byline.
 							$offset = 0;
 							while ( ! isset( $complete ) ) {
@@ -312,6 +286,32 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 							}
 						}
 					}
+					// Update the byline data from the user.
+					$byline_contact_info = empty( get_post_meta( $byline_id, 'fm_bylines_contact_info', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_contact_info', true );
+					if ( empty( $byline_contact_info['email'] ) ) {
+						$byline_contact_info['email'] = $user_data->user_email;
+					}
+					if ( empty( $byline_contact_info['website'] ) ) {
+						$byline_contact_info['website'] = ( ! empty( $user_data->user_url ) && $user_data->user_url != 'http://' ) ? $user_data->user_url : '';
+					}
+					if ( empty( $byline_contact_info['twitter'] ) ) {
+						$byline_contact_info['twitter'] = '';
+					}
+					if ( empty( $byline_contact_info['linkedin'] ) ) {
+						$byline_contact_info['linkedin'] = '';
+					}
+					// Add meta data.
+					update_post_meta( $byline_id, 'fm_bylines_contact_info', $byline_contact_info );
+
+					$bio = get_the_author_meta( 'description', $user_data->ID );
+					$byline_about = empty( get_post_meta( $byline_id, 'fm_bylines_about', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_about', true );
+					if ( empty( $byline_about['bio'] ) ) {
+						$byline_about['bio'] = ! empty( $bio ) ? $bio : '';
+					}
+					if ( empty( $byline_about['short-bio'] ) ) {
+						$byline_about['short-bio'] = '';
+					}
+
 				}
 			}
 			WP_CLI::success( 'Migration complete' );
