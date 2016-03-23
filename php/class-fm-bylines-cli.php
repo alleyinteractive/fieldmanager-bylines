@@ -292,6 +292,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					$byline_contact_info = empty( get_post_meta( $byline_id, 'fm_bylines_contact_info', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_contact_info', true );
 					if ( empty( $byline_contact_info['email'] ) ) {
 						$byline_contact_info['email'] = $user_data->user_email;
+						print_r( 'here' . $user_data->user_email );
 					}
 					if ( empty( $byline_contact_info['website'] ) ) {
 						$byline_contact_info['website'] = ( ! empty( $user_data->user_url ) && $user_data->user_url != 'http://' ) ? $user_data->user_url : '';
@@ -313,7 +314,6 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					if ( empty( $byline_about['short-bio'] ) ) {
 						$byline_about['short-bio'] = '';
 					}
-
 				}
 			}
 			WP_CLI::success( 'Migration complete' );
