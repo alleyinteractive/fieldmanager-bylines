@@ -7,16 +7,9 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 	 * Migrate Co-Authors Plus Guest Authors and linked accounts to FM Bylines
 	 *
 	 * @subcommand migrate_coauthors
-	 * @synopsis [--cleardata]
 	 */
 	public function migrate_coauthors( $args, $assoc_args ) {
 		global $coauthors_plus;
-		// Clear the legacy CAP data.
-		if ( isset( $assoc_args['cleardata'] ) ) {
-			$clear_data = true;
-		} else {
-			$clear_data = false;
-		}
 
 		if ( ! empty( $coauthors_plus->coauthor_taxonomy ) ) {
 
@@ -147,17 +140,10 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						do_action( 'fm_bylines_cli_post_cap_migration', $byline_id, $cap_meta, $cap_term, false );
 					}
 
-					// Clean legacy data. Don't delete by default. This will migrate the featured image as well.
-					if ( $clear_data ) {
-						// We are just flipping the post id here.
-						global $wpdb;
-						$wpdb->update( $wpdb->postmeta, array( 'post_id' => $byline_id ), array( 'post_id' => $cap_post[0]->ID ), array( '%d' ), array( '%d' ) );
-					} else {
-						if ( ! empty( $cap_meta ) ) {
-							// Copy cap meta.
-							foreach ( $cap_meta as $key => $value ) {
-								update_post_meta( $byline_id, $key, $value[0] );
-							}
+					if ( ! empty( $cap_meta ) ) {
+						// Copy cap meta.
+						foreach ( $cap_meta as $key => $value ) {
+							update_post_meta( $byline_id, $key, $value[0] );
 						}
 					}
 
@@ -175,19 +161,6 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 							update_post_meta( $object_id, 'fm_bylines_' . $coauthors_plus->coauthor_taxonomy . '_' . $byline_id, count( $current_bylines ) );
 						}
 
-						// Clean legacy data. Don't delete by default.
-						if ( $clear_data ) {
-							wp_delete_object_term_relationships( $object_id, $coauthors_plus->coauthor_taxonomy );
-						}
-					}
-
-					// Clean legacy data. Don't delete by default.
-					if ( $clear_data ) {
-						// Delete CAP term and associated objects.
-						wp_delete_term( $cap_term->term_id, $coauthors_plus->coauthor_taxonomy );
-
-						// Delete CAP Post.
-						wp_delete_post( $cap_post[0]->ID, true );
 					}
 
 					WP_CLI::line( "Migrated {$cap_term->slug}" );
