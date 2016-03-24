@@ -206,88 +206,85 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 				$user_data = $user->data;
 				echo 'Migrating user: ' . $user->data->display_name . "\n";
 
-				// Check to see that the user has published posts.
+				// Check by user_id to see if a byline exists for this WP User already.
 				$args = array(
-					'author' => $user_data->ID,
+					'post_type' => FM_Bylines()->name,
+					'meta_key' => 'fm_bylines_user_mapping',
+					'meta_value' => $user_data->ID,
+					'post_status' => 'publish',
+					'numberposts' => 1,
 				);
-				$user_posts = get_posts( $args );
-				if ( ! empty( $user_posts[0]->ID ) ) {
-					// Check by user_id to see if a byline exists for this WP User already.
+				$byline_post = get_posts( $args );
+
+				if ( empty( $byline_post[0]->ID ) ) {
+					// Also check by name to see if a byline exists for this WP User already.
+					$byline_slug = sanitize_title_with_dashes( $user_data->display_name );
 					$args = array(
 						'post_type' => FM_Bylines()->name,
-						'meta_key' => 'fm_bylines_user_mapping',
-						'meta_value' => $user_data->ID,
+						'name' => $byline_slug,
 						'post_status' => 'publish',
 						'numberposts' => 1,
 					);
 					$byline_post = get_posts( $args );
 
-					if ( empty( $byline_post[0]->ID ) ) {
-						// Also check by name to see if a byline exists for this WP User already.
-						$byline_slug = sanitize_title_with_dashes( $user_data->display_name );
-						$args = array(
+					// Check to see that the user has published posts.
+					$args = array(
+						'author' => $user_data->ID,
+					);
+					$user_posts = get_posts( $args );
+					if ( empty( $byline_post[0]->ID ) && ! empty( $user_posts[0]->ID ) ) {
+						// Create a byline post.
+						$byline_args = array(
+							'post_title' => $user_data->display_name,
+							'post_name' => $byline_slug,
 							'post_type' => FM_Bylines()->name,
-							'name' => $byline_slug,
 							'post_status' => 'publish',
-							'numberposts' => 1,
 						);
-						$byline_post = get_posts( $args );
-
-						if ( empty( $byline_post[0]->ID ) ) {
-							// Create a byline post.
-							$byline_args = array(
-								'post_title' => $user_data->display_name,
-								'post_name' => $byline_slug,
-								'post_type' => FM_Bylines()->name,
-								'post_status' => 'publish',
-							);
-							$byline_id = wp_insert_post( $byline_args );
-							if ( is_wp_error( $byline_id ) || empty( $byline_id ) ) {
-								WP_CLI::line( "Falied to insert byline: {$byline_slug}" );
-							} else {
-								// Link the WP User to the Byline.
-								add_post_meta( $byline_id, 'fm_bylines_user_mapping', $user_data->ID );
-							}
+						$byline_id = wp_insert_post( $byline_args );
+						if ( is_wp_error( $byline_id ) || empty( $byline_id ) ) {
+							WP_CLI::line( "Falied to insert byline: {$byline_slug}" );
 						} else {
-							$byline_id = $byline_post[0]->ID;
+							// Link the WP User to the Byline.
+							add_post_meta( $byline_id, 'fm_bylines_user_mapping', $user_data->ID );
 						}
+					}
+				} else {
+					$byline_id = $byline_post[0]->ID;
+				}
 
-						if ( ! empty( $byline_id ) ) {
-							// Loop through all the posts from that user and apply the byline.
-							$offset = 0;
-							while ( ! isset( $complete ) ) {
-								$posts = get_posts(
-									array(
-										'posts_per_page' => $batch_size,
-										'offset' => $offset,
-										'author' => $user_data->ID,
-									)
-								);
-								$offset += $batch_size;
-								if ( ! empty( $posts ) ) {
-									foreach ( $posts as $post ) {
-										// Check that the byline is empty, then add it.
-										$byline_set = get_post_meta( $post->ID, 'fm_bylines_author_' . (string) $byline_id, true );
-										if ( empty( $byline_set ) ) {
-											// Add the byline to this post.
-											$current_bylines = empty( get_post_meta( $post->ID, 'fm_bylines_author', true ) ) ? array() : get_post_meta( $post->ID, 'fm_bylines_author', true );
-											$new_byline_entry = array(
-												'byline_id' => $byline_id,
-												'fm_byline_type' => 'author',
-											);
-											$current_bylines[] = $new_byline_entry;
-											update_post_meta( $post->ID, 'fm_bylines_author', $current_bylines );
-											update_post_meta( $post->ID, 'fm_bylines_author_' . $byline_id, count( $current_bylines ) );
-										}
-									}
-								} else {
-									$complete = true;
+				// Loop through all the posts from that user and apply the byline.
+				if ( ! empty( $byline_id ) ) {
+					$offset = 0;
+					while ( ! isset( $complete ) ) {
+						$posts = get_posts(
+							array(
+								'posts_per_page' => $batch_size,
+								'offset' => $offset,
+								'author' => $user_data->ID,
+							)
+						);
+						$offset += $batch_size;
+						if ( ! empty( $posts ) ) {
+							foreach ( $posts as $post ) {
+								// Check that the byline is empty, then add it.
+								$byline_set = get_post_meta( $post->ID, 'fm_bylines_author_' . (string) $byline_id, true );
+								if ( empty( $byline_set ) ) {
+									// Add the byline to this post.
+									$current_bylines = empty( get_post_meta( $post->ID, 'fm_bylines_author', true ) ) ? array() : get_post_meta( $post->ID, 'fm_bylines_author', true );
+									$new_byline_entry = array(
+										'byline_id' => $byline_id,
+										'fm_byline_type' => 'author',
+									);
+									$current_bylines[] = $new_byline_entry;
+									update_post_meta( $post->ID, 'fm_bylines_author', $current_bylines );
+									update_post_meta( $post->ID, 'fm_bylines_author_' . $byline_id, count( $current_bylines ) );
 								}
 							}
+						} else {
+							$complete = true;
 						}
-					} else {
-						$byline_id = $byline_post[0]->ID;
 					}
+
 					// Update the byline data from the user.
 					$byline_contact_info = empty( get_post_meta( $byline_id, 'fm_bylines_contact_info', true ) ) ? array() : get_post_meta( $byline_id, 'fm_bylines_contact_info', true );
 					if ( empty( $byline_contact_info['email'] ) ) {
@@ -314,6 +311,8 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					if ( empty( $byline_about['short-bio'] ) ) {
 						$byline_about['short-bio'] = '';
 					}
+					// Add meta data.
+					update_post_meta( $byline_id, 'fm_bylines_about', $byline_about );
 				}
 			}
 			WP_CLI::success( 'Migration complete' );
