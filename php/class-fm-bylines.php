@@ -681,7 +681,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				$urls[] = $this->get_byline_link( $byline_id, $type );
 			}
 
-			echo $this->write_byline( $urls );
+			return $this->write_byline( $urls );
 		}
 
 		/**
