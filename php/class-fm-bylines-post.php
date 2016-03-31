@@ -191,7 +191,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 					$templates = array(
 						"archive-{$post_type}-{$type}.php",
 						"archive-{$post_type}.php",
-						'single.php',
+						'archive.php',
 					);
 					return get_query_template( 'archive', $templates );
 				}
