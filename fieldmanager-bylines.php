@@ -31,7 +31,7 @@ add_action( 'plugins_loaded', 'fm_bylines_init' );
 
 function fm_bylines_dependency() {
 
-	$fm_bylines_dependency = new Plugin_Dependency( 'Fieldmanager', 'Fieldmanager', 'https://github.com/netaustin/wordpress-fieldmanager' );
+	$fm_bylines_dependency = new Plugin_Dependency( 'Fieldmanager Bylines', 'Fieldmanager', 'https://github.com/netaustin/wordpress-fieldmanager' );
 	if ( ! $fm_bylines_dependency->verify() ) {
 		// Cease activation
 		die( $fm_bylines_dependency->message() );
