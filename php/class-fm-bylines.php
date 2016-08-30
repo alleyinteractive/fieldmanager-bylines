@@ -634,6 +634,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				$byline_ids = $this->get_byline_ids();
 				$byline_id = reset( $byline_ids );
 			}
+
 			if ( ! empty( $byline_id ) ) {
 				$byline = get_post( $byline_id );
 
@@ -654,13 +655,15 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 					}
 
 					$byline_meta = get_post_meta( $byline_id );
-					foreach ( $byline_meta as $key => $value ) {
-						if ( $field_key == $key ) {
-							return maybe_unserialize( $value[0] );
-						} elseif ( is_serialized( $value[0] ) ) {
-							$meta_values = maybe_unserialize( $value[0] );
-							if ( array_key_exists( $field_key, $meta_values ) ) {
-								return $meta_values[ $field_key ];
+					if ( ! empty( $byline_meta ) ) {
+						foreach ( $byline_meta as $key => $value ) {
+							if ( $field_key == $key ) {
+								return maybe_unserialize( $value[0] );
+							} elseif ( is_serialized( $value[0] ) ) {
+								$meta_values = maybe_unserialize( $value[0] );
+								if ( array_key_exists( $field_key, $meta_values ) ) {
+									return $meta_values[ $field_key ];
+								}
 							}
 						}
 					}
