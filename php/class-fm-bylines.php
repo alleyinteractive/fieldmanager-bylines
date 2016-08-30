@@ -371,7 +371,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * @return void
 		 */
 		public function delete_byline( $byline_id ) {
-			if ( $this->name == get_post_type( $byline_id ) ) {
+			if ( get_post_type( $byline_id ) === $this->name ) {
 				$associated_posts = $this->get_byline_associated_posts( $byline_id );
 				foreach ( $associated_posts as $post_id => $byline_types ) {
 					foreach ( $byline_types as $type ) {
@@ -472,7 +472,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			// Comment avatars in core are always called with the comment object.
 			// get_avatar only uses user ids in the admin area.
 			if ( ( is_object( $byline ) && ! empty( $byline->post_type ) && $byline->post_type == $this->name ) ||
-				( is_numeric( $byline ) && $this->name == get_post_type( $byline ) ) ) {
+				( is_numeric( $byline ) && get_post_type( $byline ) === $this->name ) ) {
 				return true;
 			}
 			return false;
@@ -635,32 +635,36 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				$byline_id = reset( $byline_ids );
 			}
 
-			$byline = get_post( $byline_id );
+			if ( ! empty( $byline_id ) ) {
+				$byline = get_post( $byline_id );
 
-			if ( $byline->post_type == $this->name ) {
-				$fields = $this->byline_meta_keys();
-				if ( ! empty( $fields[ $field ] ) ) {
-					$field_key = $fields[ $field ];
-				} else {
-					// This allows you to retrieve any meta key.
-					$field_key = $field;
-				}
+				if ( ! empty( $byline ) && $byline->post_type == $this->name ) {
+					$fields = $this->byline_meta_keys();
+					if ( ! empty( $fields[ $field ] ) ) {
+						$field_key = $fields[ $field ];
+					} else {
+						// This allows you to retrieve any meta key.
+						$field_key = $field;
+					}
 
-				if ( 'fm_error_key' == $field_key ) {
-					return;
-				}
-				if ( in_array( $field_key, array( 'ID', 'post_name', 'post_title' ) ) ) {
-					return $byline->$field_key;
-				}
+					if ( 'fm_error_key' == $field_key ) {
+						return;
+					}
+					if ( in_array( $field_key, array( 'ID', 'post_name', 'post_title' ) ) ) {
+						return $byline->$field_key;
+					}
 
-				$byline_meta = get_post_meta( $byline_id );
-				foreach ( $byline_meta as $key => $value ) {
-					if ( $field_key == $key ) {
-						return maybe_unserialize( $value[0] );
-					} elseif ( is_serialized( $value[0] ) ) {
-						$meta_values = maybe_unserialize( $value[0] );
-						if ( array_key_exists( $field_key, $meta_values ) ) {
-							return $meta_values[ $field_key ];
+					$byline_meta = get_post_meta( $byline_id );
+					if ( ! empty( $byline_meta ) ) {
+						foreach ( $byline_meta as $key => $value ) {
+							if ( $field_key == $key ) {
+								return maybe_unserialize( $value[0] );
+							} elseif ( is_serialized( $value[0] ) ) {
+								$meta_values = maybe_unserialize( $value[0] );
+								if ( array_key_exists( $field_key, $meta_values ) ) {
+									return $meta_values[ $field_key ];
+								}
+							}
 						}
 					}
 				}
@@ -706,7 +710,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * @return string
 		 */
 		public function get_byline_url( $byline_id = null, $type = 'author' ) {
-			if ( ! empty( $byline_id ) && $this->name == get_post_type( $byline_id ) ) {
+			if ( ! empty( $byline_id ) && get_post_type( $byline_id ) === $this->name ) {
 				// It's possible this might be called before theme setup. So make sure we have the right slug here.
 				$this->slug = sanitize_title_with_dashes( apply_filters( 'fm_bylines_filter_rewrite_slug', $this->slug ) );
 				$url = get_permalink( $byline_id );
