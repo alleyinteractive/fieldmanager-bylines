@@ -637,7 +637,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			if ( ! empty( $byline_id ) ) {
 				$byline = get_post( $byline_id );
 
-				if ( $byline->post_type == $this->name ) {
+				if ( ! empty( $byline ) && $byline->post_type == $this->name ) {
 					$fields = $this->byline_meta_keys();
 					if ( ! empty( $fields[ $field ] ) ) {
 						$field_key = $fields[ $field ];
