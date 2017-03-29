@@ -31,7 +31,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 		public function setup() {
 
-			$this->context = fm_get_context();
+			$this->context = fm_calculate_context();
 
 			// Support byline types by default
 			$this->byline_types = apply_filters( 'fm_bylines_filter_types', array( 'author' ) );
