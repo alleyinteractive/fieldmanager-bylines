@@ -256,14 +256,14 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			switch ( $page ) {
 				// Context = "post".
 				case 'post.php':
-					if ( !empty( $_POST['action'] ) && ( 'editpost' === $_POST['action'] || 'newpost' === $_POST['action'] ) ) {
+					if ( ! empty( $_POST['action'] ) && ( 'editpost' === $_POST['action'] || 'newpost' === $_POST['action'] ) ) {
 						$context = array( 'post', sanitize_text_field( $_POST['post_type'] ) );
 					} elseif ( !empty( $_GET['post'] ) ) {
 						$context = array( 'post', get_post_type( intval( $_GET['post'] ) ) );
 					}
 					break;
 				case 'post-new.php':
-					$context = array( 'post', !empty( $_GET['post_type'] ) ? sanitize_text_field( $_GET['post_type'] ) : 'post' );
+					$context = array( 'post', ! empty( $_GET['post_type'] ) ? sanitize_text_field( $_GET['post_type'] ) : 'post' );
 					break;
 			}
 
