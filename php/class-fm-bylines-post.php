@@ -31,7 +31,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 		public function setup() {
 
-			$this->context = fm_get_context();
+			$this->context = $this->set_context();
 
 			// Support byline types by default
 			$this->byline_types = apply_filters( 'fm_bylines_filter_types', array( 'author' ) );
@@ -40,16 +40,17 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 			add_action( 'after_setup_theme', array( $this, 'theme_setup' ), 20 );
 
 			if ( is_admin() ) {
-				if ( 'post' === $this->context[0] ) {
+				if ( ! empty( $this->context[0] ) && 'post' === $this->context[0] ) {
 					// Disable bylines on attachments by default.
 					if ( 'attachment' != $this->context[1] || apply_filters( 'fm_bylines_on_attachments', false ) ) {
 						add_action( 'do_meta_boxes', array( $this, 'remove_meta_boxes' ) );
 						add_action( "fm_{$this->context[0]}_{$this->context[1]}", array( $this, 'add_meta_boxes' ) );
 					}
+
+					// Set the column super early so other plugins can manipulate it using the same hook
+					add_filter( "manage_{$this->context[1]}_posts_columns", array( $this, 'set_posts_columns' ), 2, 2 );
+					add_action( "manage_{$this->context[1]}_posts_custom_column", array( $this, 'display_byline_type_column' ), 10, 2 );
 				}
-				// Set the column super early so other plugins can manipulate it using the same hook
-				add_filter( "manage_{$this->context[1]}_posts_columns", array( $this, 'set_posts_columns' ), 2, 2 );
-				add_action( "manage_{$this->context[1]}_posts_custom_column", array( $this, 'display_byline_type_column' ), 10, 2 );
 			}
 
 			add_filter( 'template_include', array( $this, 'set_byline_type_template' ) );
@@ -242,6 +243,31 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 					}
 				}
 			};
+		}
+
+		/**
+		 * Sets the current admin context relevant to this plugin
+		 */
+		public function set_context() {
+			$page = substr( $_SERVER['PHP_SELF'], strrpos( $_SERVER['PHP_SELF'], '/' ) + 1 );
+
+			$context = null;
+
+			switch ( $page ) {
+				// Context = "post".
+				case 'post.php':
+					if ( ! empty( $_POST['action'] ) && ( 'editpost' === $_POST['action'] || 'newpost' === $_POST['action'] ) ) {
+						$context = array( 'post', sanitize_text_field( $_POST['post_type'] ) );
+					} elseif ( !empty( $_GET['post'] ) ) {
+						$context = array( 'post', get_post_type( intval( $_GET['post'] ) ) );
+					}
+					break;
+				case 'post-new.php':
+					$context = array( 'post', ! empty( $_GET['post_type'] ) ? sanitize_text_field( $_GET['post_type'] ) : 'post' );
+					break;
+			}
+
+			return $context;
 		}
 	}
 }
