@@ -265,6 +265,23 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 				case 'post-new.php':
 					$context = array( 'post', ! empty( $_GET['post_type'] ) ? sanitize_text_field( $_GET['post_type'] ) : 'post' );
 					break;
+				case 'admin-ajax.php':
+					// Passed in via an Ajax form.
+					if ( !empty( $_POST['fm_context'] ) ) {
+						$subcontext = !empty( $_POST['fm_subcontext'] ) ? sanitize_text_field( $_POST['fm_subcontext'] ) : null;
+						$context = array( sanitize_text_field( $_POST['fm_context'] ), $subcontext );
+					} elseif ( !empty( $_POST['screen'] ) && !empty( $_POST['action'] ) ) {
+						if ( 'edit-post' === $_POST['screen'] && 'inline-save' === $_POST['action'] ) {
+							$context = array( 'quickedit', sanitize_text_field( $_POST['post_type'] ) );
+							// Context = "term".
+						} elseif ( 'add-tag' === $_POST['action'] && !empty( $_POST['taxonomy'] ) ) {
+							$context = array( 'term', sanitize_text_field( $_POST['taxonomy'] ) );
+						}
+						// Context = "quickedit".
+					} elseif ( !empty( $_GET['action'] ) && 'fm_quickedit_render' === $_GET['action'] ) {
+						$context = array( 'quickedit', sanitize_text_field( $_GET['post_type'] ) );
+					}
+					break;
 			}
 
 			return $context;
