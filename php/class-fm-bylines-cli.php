@@ -1,17 +1,28 @@
 <?php
+/**
+ * WP-CLI commands
+ *
+ * @package Fieldmanager_Bylines
+ */
+
 WP_CLI::add_command( 'fm-bylines', 'FM_Bylines_CLI' );
 
+/**
+ * Class FM_Bylines_CLI
+ */
 class FM_Bylines_CLI extends WP_CLI_Command {
-
 	/**
 	 * Migrate Co-Authors Plus Guest Authors and linked accounts to FM Bylines
 	 *
 	 * @subcommand migrate_coauthors
 	 * @synopsis [--cleardata]
+	 *
+	 * @param array $args Positional arguments.
+	 * @param array $assoc_args Associative arguments.
 	 */
 	public function migrate_coauthors( $args, $assoc_args ) {
 		global $coauthors_plus;
-		// Clear the legacy CAP data
+		// Clear the legacy CAP data.
 		if ( $assoc_args['cleardata'] ) {
 			$clear_data = true;
 		} else {
@@ -37,7 +48,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 					if ( ! empty( $cap_post[0]->ID ) ) {
 						$cap_meta = apply_filters( 'fm_bylines_cli_cap_meta', get_post_meta( $cap_post[0]->ID ), $cap_post[0], $cap_term );
 
-						// Check to see if a byline exists for this CAP already
+						// Check to see if a byline exists for this CAP already.
 						$byline_slug = preg_replace( '/^cap-/', '', $cap_term->slug );
 						$args        = array(
 							'post_type'   => FM_Bylines()->name,
@@ -48,7 +59,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						$byline_post = get_posts( $args );
 
 						if ( empty( $byline_post[0]->ID ) ) {
-							// Create a byline post
+							// Create a byline post.
 							$byline_args = array(
 								'post_title'  => $cap_meta['cap-display_name'][0],
 								'post_name'   => $byline_slug,
@@ -102,15 +113,15 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						if ( $clear_data ) {
 							// We are just flipping the post id here.
 							global $wpdb;
-							$wpdb->update( $wpdb->postmeta, array( 'post_id' => $byline_id ), array( 'post_id' => $cap_post[0]->ID ), array( '%d' ), array( '%d' ) );
+							$wpdb->update( $wpdb->postmeta, array( 'post_id' => $byline_id ), array( 'post_id' => $cap_post[0]->ID ), array( '%d' ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 						} else {
-							// Copy cap meta
+							// Copy cap meta.
 							foreach ( $cap_meta as $key => $value ) {
 								update_post_meta( $byline_id, $key, $value[0] );
 							}
 						}
 
-						// Update posts so byline authors reflect CAP authors
+						// Update posts so byline authors reflect CAP authors.
 						$objects = get_objects_in_term( $cap_term->term_id, $coauthors_plus->coauthor_taxonomy );
 						foreach ( $objects as $object_id ) {
 							if ( get_post_type( $object_id ) !== $coauthors_plus->guest_authors->post_type ) {
@@ -132,10 +143,10 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 
 						// Clean legacy data. Don't delete by default.
 						if ( $clear_data ) {
-							// Delete CAP term and associated objects
+							// Delete CAP term and associated objects.
 							wp_delete_term( $cap_term->term_id, $coauthors_plus->coauthor_taxonomy );
 
-							// Delete CAP Post
+							// Delete CAP Post.
 							wp_delete_post( $cap_post[0]->ID, true );
 						}
 
