@@ -1,28 +1,48 @@
 <?php
 /**
- * Fieldmanager Byline Class
+ * Core plugin functionality
+ *
+ * @package Fieldmanager_Bylines
  */
 
 if ( ! class_exists( 'FM_Bylines' ) ) {
-
+	/**
+	 * Class FM_Bylines
+	 */
 	class FM_Bylines {
-
+		/**
+		 * The one true object
+		 *
+		 * @var object
+		 */
 		private static $instance;
 
 		/**
 		 * The post type name
+		 *
+		 * @var string
 		 */
 		public $name = 'byline';
 
 		/**
 		 * Slug used for rewrites
+		 *
+		 * @var string
 		 */
 		public $slug = 'byline';
 
+		/**
+		 * Silence is golden
+		 */
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
 		}
 
+		/**
+		 * Instantiate singleton
+		 *
+		 * @return object
+		 */
 		public static function instance() {
 			if ( ! isset( self::$instance ) ) {
 				self::$instance = new FM_Bylines();
@@ -31,13 +51,16 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			return self::$instance;
 		}
 
+		/**
+		 * Register plugin hooks
+		 */
 		public function setup() {
 			// Set the slug we will use for the base byline type.
 			$this->slug = sanitize_title_with_dashes( apply_filters( 'fm_bylines_filter_rewrite_slug', $this->slug ) );
 
 			add_action( 'init', array( $this, 'setup_data_structure' ), 20 );
 
-			// Add custom meta boxes
+			// Add custom meta boxes.
 			if ( is_admin() ) {
 				add_action( 'fm_post_' . $this->name, array( $this, 'add_meta_boxes' ) );
 				add_filter( 'enter_title_here', array( $this, 'set_display_name_description' ), 10, 2 );
@@ -50,11 +73,14 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 			add_filter( 'get_avatar', array( $this, 'get_avatar' ), 20, 6 );
 
-			// Force the user avatar in the admin bar and admin area
+			// Force the user avatar in the admin bar and admin area.
 			add_action( 'admin_bar_menu', array( $this, 'force_user_avatar' ), 0 );
 			add_action( 'add_admin_bar_menus', array( $this, 'remove_force_user_avatar' ), 9999 );
 		}
 
+		/**
+		 * Create post type
+		 */
 		public function setup_data_structure() {
 			$this->create_post_type();
 		}
@@ -63,7 +89,6 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * Creates the post type.
 		 *
 		 * @access public
-		 * @return void
 		 */
 		public function create_post_type() {
 			$labels = array(
@@ -159,7 +184,6 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * Adds custom meta boxes for this post type.
 		 *
 		 * @access public
-		 * @return void
 		 */
 		public function add_meta_boxes() {
 
@@ -240,6 +264,9 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		/**
 		 * Make user search allow partial matches
+		 *
+		 * @param string $fragment Search term.
+		 * @return array
 		 */
 		public static function get_user_list( $fragment ) {
 			$user_args = array(
@@ -262,9 +289,9 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Add in a FM_Byline meta box w/ all it's bells and whistles
 		 *
-		 * @param string $type
-		 * @param string. Optional label
-		 * @param array  $args
+		 * @param string $type Byline type.
+		 * @param string $label Optional label.
+		 * @param array  $args Meta box arguments.
 		 */
 		function add_byline_meta_box( $type = 'author', $label = null, $args = array() ) {
 
@@ -302,16 +329,16 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 				$fm_byline_box = new Fieldmanager_Group( wp_parse_args( $args, $defaults ) );
 
-				if ( 'post' == $fm_context ) {
+				if ( 'post' === $fm_context ) {
 					$fm_byline_box->add_meta_box( $label, $fm_context_type, apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_post_metabox_context', 'normal' ), apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_post_metabox_priority', 'default' ) );
-				} elseif ( 'term' == $fm_context ) {
+				} elseif ( 'term' === $fm_context ) {
 					$fm_byline_box->add_term_form( $label, $fm_context_type );
-				} elseif ( 'submenu' == $fm_context ) {
+				} elseif ( 'submenu' === $fm_context ) {
 					fm_register_submenu_page( 'fm_bylines_' . sanitize_title_with_dashes( $type ), apply_filters( 'fm_bylines_' . sanitize_title_with_dashes( $type ) . '_filter_metabox_submenu', 'tools.php' ), $label );
 					$fm_byline_box->activate_submenu_page();
-				} elseif ( 'user' == $fm_context ) {
+				} elseif ( 'user' === $fm_context ) {
 					$fm_byline_box->add_user_form( $label );
-				} elseif ( 'quickedit' == $fm_context ) {
+				} elseif ( 'quickedit' === $fm_context ) {
 					$fm_byline_box->add_quickedit_box(
 						$label, $fm_context_type, function( $post_id, $data ) {
 							return ! empty( $data[ 'fm_bylines_' . sanitize_title_with_dashes( $type ) ] ) ? $data[ 'fm_bylines_' . sanitize_title_with_dashes( $type ) ] : 'not set';
@@ -324,12 +351,17 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Only set the default for the first byline in the metabox.
 		 * We overwrite the default value for only the first entry in the metabox if the logged in user is mapped to a byline.
+		 *
+		 * @param array  $classes FM element classes.
+		 * @param string $name Field name.
+		 * @param object $field FM Field object.
+		 * @return array
 		 */
 		public function display_default_byline( $classes, $name, $field ) {
-			if ( ! empty( $field->data_id ) && get_post_type( $field->data_id ) != $this->name ) {
+			if ( ! empty( $field->data_id ) && get_post_type( $field->data_id ) !== $this->name ) {
 				$pattern = '/^fm-fm_bylines_(.*)-(.*)-.*-\d$/';
 				preg_match( $pattern, $field->get_element_id(), $matches );
-				if ( 'byline_id' == $name && ! empty( $matches ) ) {
+				if ( 'byline_id' === $name && ! empty( $matches ) ) {
 					$type  = $matches[1];
 					$index = $matches[2];
 					// On new posts only, use default values.  This allows for empty bylines.
@@ -346,9 +378,13 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		/**
 		 * Set the display name description
+		 *
+		 * @param string  $text Description.
+		 * @param WP_Post $post Post object.
+		 * @return string
 		 */
 		public function set_display_name_description( $text, $post ) {
-			if ( $post->post_type == $this->name ) {
+			if ( $post->post_type === $this->name ) {
 				$text = __( 'Enter display name here', 'fm_bylines' );
 			}
 			return $text;
@@ -356,11 +392,16 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		/**
 		 * Presave alter value hook to save some additional meta info and unset unnecessary data
+		 *
+		 * @param array  $values Values to alter.
+		 * @param object $object FM Field.
+		 * @param array  $current_values Current values.
+		 * @return array
 		 */
 		public function save_byline_meta( $values, $object, $current_values ) {
 
 			// Check the byline type as this field is not added on the byline post type page.
-			if ( preg_match( '/fm_bylines_/', $object->name ) && get_post_type() != $this->name ) {
+			if ( preg_match( '/fm_bylines_/', $object->name ) && get_post_type() !== $this->name ) {
 				$post_id = get_the_ID();
 				foreach ( $current_values as $current_value ) {
 					if ( ! empty( $current_value['byline_id'] ) ) {
@@ -385,8 +426,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Delete additional byline postmeta data on delete
 		 *
-		 * @param int $byline_id
-		 * @return void
+		 * @param int $byline_id Byline object ID.
 		 */
 		public function delete_byline( $byline_id ) {
 			if ( get_post_type( $byline_id ) === $this->name ) {
@@ -396,7 +436,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 						$meta_key  = 'fm_bylines_' . sanitize_title_with_dashes( $type );
 						$meta_data = get_post_meta( $post_id, $meta_key, true );
 						foreach ( $meta_data as $i => $data ) {
-							if ( ( empty( $data['byline_id'] ) || $data['byline_id'] == $byline_id ) && $data['fm_byline_type'] == $type ) {
+							if ( ( empty( $data['byline_id'] ) || $data['byline_id'] === $byline_id ) && $data['fm_byline_type'] === $type ) {
 								unset( $meta_data[ $i ] );
 							}
 						}
@@ -408,11 +448,15 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		}
 
 		/**
-		 * Helper functions for remove and adding filter hooks
+		 * Helper functions for adding filter hooks
 		 */
 		public function force_user_avatar() {
 			add_filter( 'fm_bylines_force_user_avatar_display', '__return_true', 20 );
 		}
+
+		/**
+		 * Helper functions for removing filter hooks
+		 */
 		public function remove_force_user_avatar() {
 			remove_filter( 'fm_bylines_force_user_avatar_display', '__return_true', 20 );
 		}
@@ -420,10 +464,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get the featured image of a byline
 		 *
-		 * @param mixed. $byline_id int or post object
-		 * @param mixed. $size string or array
-		 * @param array. $args. get_avatar args
-		 * @return string. HTML img string
+		 * @param WP_Post|int  $byline_id Byline ID or object.
+		 * @param string|array $size Named size or array of width and height.
+		 * @param array        $args get_avatar args.
+		 * @return string
 		 */
 		public function get_byline_avatar( $byline_id, $size, $args ) {
 			$avatar = '';
@@ -431,10 +475,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			if ( $this->is_byline_object( $byline_id ) ) {
 				$byline = get_post( $byline_id );
 
-				// If you want to show default avatars for comments and users but not bylines, you can override the options with this hook
+				// If you want to show default avatars for comments and users but not bylines, you can override the options with this hook.
 				$display_default = apply_filters( 'fm_bylines_display_avatar_default', ( empty( $args['force_default'] ) ) ? false : $args['force_default'] );
 
-				// Set our avatar args
+				// Set our avatar args.
 				$params = array(
 					'class' => 'avatar avatar-' . (string) $size . ' photo',
 				);
@@ -480,6 +524,14 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * Get the avatar associated with a byline
 		 * Some trickey stuff is going on here since avatars are used for users as well on the back-end so we don't want to necessarily override this functionailty for comments or for user display on the backend
 		 * Best thing to do is to use fm_get_byline_avatar() instead of trying to use the core get_avatar function when you can control when it is called. For any legacy code, this hooks should do the trick.
+		 *
+		 * @param string       $avatar Avatar image markup.
+		 * @param int|string   $id_or_email User ID or email address.
+		 * @param string|array $size Named size or array of width and height.
+		 * @param string       $default URL for the default image or a default type.
+		 * @param string       $alt Alt tag content.
+		 * @param array        $args Avatar arguments.
+		 * @return string
 		 */
 		public function get_avatar( $avatar, $id_or_email, $size, $default, $alt, $args ) {
 			// Force display here is acting as a legacy param.  So if you force the display, it will force the display of user avatars and not bylines.  You can use this hook to control user avatar display on a granular level.
@@ -495,7 +547,8 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Is the current id a byline object?  Work around for when user ids and byline ids overlap.
 		 *
-		 * @param mixed. $byline can be an int id, an email string or a comment object.
+		 * @param mixed $byline can be an int id, an email string or a comment object.
+		 * @return bool
 		 */
 		public function is_byline_object( $byline ) {
 			// Comment avatars in core are always called with the comment object.
@@ -510,8 +563,8 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get associated post_ids of a byline
 		 *
-		 * @param int $byline_id
-		 * @return array.  An associate array with post_id as the key and an array of types as the values.
+		 * @param int $byline_id Byline object ID.
+		 * @return array
 		 */
 		public function get_byline_associated_posts( $byline_id ) {
 			global $wpdb;
@@ -531,7 +584,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 					preg_match( $pattern, $meta_row->meta_key, $matches );
 					if ( ! empty( $matches[1] ) ) {
 						$type = $matches[1];
-						if ( empty( $associated_posts[ $meta_row->post_id ] ) || ! in_array( $type, $associated_posts[ $meta_row->post_id ] ) ) {
+						if ( empty( $associated_posts[ $meta_row->post_id ] ) || ! in_array( $type, $associated_posts[ $meta_row->post_id ], true ) ) {
 							$associated_posts[ $meta_row->post_id ][] = $type;
 						}
 					}
@@ -543,9 +596,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get a list of byline objects for a post.
 		 *
-		 * @param int    $post_id.
-		 * @param string $type. Defaults to author.
-		 * @return array()
+		 * @param int    $post_id Byline object ID.
+		 * @param string $type Byline type.
+		 * @param array  $params Byline params.
+		 * @return array
 		 */
 		public function get_byline( $post_id = null, $type = 'author', $params = array() ) {
 			if ( empty( $post_id ) ) {
@@ -567,8 +621,8 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get a list of byline ids for a post.
 		 *
-		 * @param int    $post_id.
-		 * @param string $type. Defaults to author.
+		 * @param int    $post_id Byline object ID.
+		 * @param string $type Byline type.
 		 * @return array
 		 */
 		public function get_byline_ids( $post_id = null, $type = 'author' ) {
@@ -586,10 +640,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get all the posts for a single byline.
 		 *
-		 * @param int. $byline_id
-		 * @param string. $byline_type
-		 * @param array. $params
-		 * @return array.
+		 * @param int    $byline_id Byline object ID.
+		 * @param string $type Byline type.
+		 * @param array  $params WP_Query arguments.
+		 * @return array
 		 */
 		public function get_byline_posts( $byline_id, $type = 'author', $params = array() ) {
 			$defaults = array(
@@ -606,10 +660,10 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * Get WP Query for the posts for a single byline.
 		 * Use to create loops on single byline pages.
 		 *
-		 * @param int. $byline_id
-		 * @param string. $byline_type
-		 * @param array. $params
-		 * @return object. WP_Query object.
+		 * @param int    $byline_id Byline object ID.
+		 * @param string $type Byline type.
+		 * @param array  $params WP_Query arguments.
+		 * @return WP_Query
 		 */
 		public function get_byline_posts_query( $byline_id = null, $type = null, $params = array() ) {
 			$byline_id = ( empty( $byline_id ) ) ? get_the_ID() : $byline_id;
@@ -630,16 +684,19 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 		/**
 		 * Are we currently on a byline archive page.  Equivalent to is_author().
+		 *
+		 * @param string $type Byline type.
+		 * @return bool
 		 */
 		public function is_byline( $type = 'author' ) {
 			$post_type = get_post_type();
 
-			if ( $this->name != $post_type ) {
+			if ( $this->name !== $post_type ) {
 				return false;
 			}
 
 			$byline_type = $this->get_byline_type();
-			if ( $byline_type && $type == $byline_type ) {
+			if ( $byline_type && $type === $byline_type ) {
 				return true;
 			}
 
@@ -656,12 +713,13 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Get Byline meta data. Equivalent of get_the_author_meta().
 		 *
-		 * @param int. byline id.
-		 * @return mixed
+		 * @param string $field Meta to retrieve.
+		 * @param int    $byline_id Byline object ID.
+		 * @return string
 		 */
 		public function get_the_byline_meta( $field, $byline_id = null ) {
 			if ( empty( $field ) ) {
-				return;
+				return '';
 			}
 
 			if ( empty( $byline_id ) ) {
@@ -674,7 +732,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			if ( ! empty( $byline_id ) ) {
 				$byline = get_post( $byline_id );
 
-				if ( ! empty( $byline ) && $byline->post_type == $this->name ) {
+				if ( ! empty( $byline ) && $byline->post_type === $this->name ) {
 					$fields = $this->byline_meta_keys();
 					if ( ! empty( $fields[ $field ] ) ) {
 						$field_key = $fields[ $field ];
@@ -683,17 +741,17 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 						$field_key = $field;
 					}
 
-					if ( 'fm_error_key' == $field_key ) {
-						return;
+					if ( 'fm_error_key' === $field_key ) {
+						return '';
 					}
-					if ( in_array( $field_key, array( 'ID', 'post_name', 'post_title' ) ) ) {
+					if ( in_array( $field_key, array( 'ID', 'post_name', 'post_title' ), true ) ) {
 						return $byline->$field_key;
 					}
 
 					$byline_meta = get_post_meta( $byline_id );
 					if ( ! empty( $byline_meta ) ) {
 						foreach ( $byline_meta as $key => $value ) {
-							if ( $field_key == $key ) {
+							if ( $field_key === $key ) {
 								return maybe_unserialize( $value[0] );
 							} elseif ( is_serialized( $value[0] ) ) {
 								$meta_values = maybe_unserialize( $value[0] );
@@ -705,15 +763,15 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 					}
 				}
 			}
-			return;
+			return '';
 		}
 
 		/**
 		 * Get the html byline url for all bylines of a given type for a single post.
 		 *
-		 * @param int, post_id.
-		 * @param string. type.
-		 * @return string.
+		 * @param int    $post_id Post ID.
+		 * @param string $type Byline type.
+		 * @return string
 		 */
 		public function get_bylines_posts_links( $post_id = null, $type = 'author' ) {
 			$byline_ids = $this->get_byline_ids( $post_id, $type );
@@ -729,7 +787,8 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * Get the html markup for a single byline link.
 		 * Takes a single byline id.
 		 *
-		 * @param int. byline_id.
+		 * @param int    $byline_id Byline object ID.
+		 * @param string $type Byline type.
 		 * @return string
 		 */
 		public function get_byline_link( $byline_id, $type = 'author' ) {
@@ -745,7 +804,8 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * Get the byline url
 		 * Takes a single byline id
 		 *
-		 * @param int. byline_id.
+		 * @param int    $byline_id Byline object ID.
+		 * @param string $type Byline type.
 		 * @return string
 		 */
 		public function get_byline_url( $byline_id = null, $type = 'author' ) {
@@ -757,14 +817,14 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 				return $url;
 			}
-			return;
+			return '';
 		}
 
 		/**
 		 * Get the byline id associated with a user id.
 		 *
-		 * @param int $user_id.
-		 * @return mixed(int|boolean) byline post ID or false.
+		 * @param int $user_id WP user ID.
+		 * @return int|bool
 		 */
 		public function get_byline_user_mapping( $user_id = null ) {
 			if ( empty( $user_id ) ) {
@@ -791,7 +851,11 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Write a byline
 		 *
-		 * @param array. An array of bylines to write.
+		 * @param array  $bylines An array of bylines to write.
+		 * @param string $before Text to prepend.
+		 * @param string $separator Byline separator.
+		 * @param string $final_separator Separator after last item.
+		 * @param string $after Text to append.
 		 * @return string
 		 */
 		public function write_byline( $bylines, $before = null, $separator = null, $final_separator = null, $after = null ) {
@@ -812,12 +876,17 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			$both            = array_filter( array_merge( array( $first ), $last ) );
 			$byline          = wp_kses_post( $before ) . ' ' . implode( esc_html( ' ' . $final_separator . ' ' ), $both );
 			$byline         .= ( empty( $after ) ) ? '' : ' ' . wp_kses_post( $after );
-			return  $byline;
+			return $byline;
 		}
 	}
 }
 
-function FM_Bylines() {
+/**
+ * FM Bylines instance
+ *
+ * @return object
+ */
+function FM_Bylines() { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid, Generic.Functions.OpeningFunctionBraceKernighanRitchie.ContentAfterBrace
 	return FM_Bylines::instance();
 }
 add_action( 'after_setup_theme', 'FM_Bylines' );
