@@ -125,7 +125,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 }
 
 /**
- * FM Bylines instance
+ * FM Bylines Author instance
  *
  * @return object
  */

@@ -53,5 +53,4 @@ function fm_bylines_get_baseurl() {
 /**
  * Enqueue scripts and styles
  */
-function fm_bylines_enqueue_assets() {
-}
+function fm_bylines_enqueue_assets() {}
