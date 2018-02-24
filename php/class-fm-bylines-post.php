@@ -56,7 +56,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		 * Register plugin hooks
 		 */
 		public function setup() {
-			$this->context = $this->set_context();
+			$this->context = fm_get_context();
 
 			// Support byline types by default.
 			$this->byline_types = apply_filters( 'fm_bylines_filter_types', array( 'author' ) );
@@ -287,27 +287,12 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 		/**
 		 * Sets the current admin context relevant to this plugin
+		 *
+		 * @deprecated
 		 */
 		public function set_context() {
-			$page = substr( $_SERVER['PHP_SELF'], strrpos( $_SERVER['PHP_SELF'], '/' ) + 1 );
-
-			$context = null;
-
-			switch ( $page ) {
-				// Context = "post".
-				case 'post.php':
-					if ( ! empty( $_POST['action'] ) && ( 'editpost' === $_POST['action'] || 'newpost' === $_POST['action'] ) ) {
-						$context = array( 'post', sanitize_text_field( $_POST['post_type'] ) );
-					} elseif ( ! empty( $_GET['post'] ) ) {
-						$context = array( 'post', get_post_type( intval( $_GET['post'] ) ) );
-					}
-					break;
-				case 'post-new.php':
-					$context = array( 'post', ! empty( $_GET['post_type'] ) ? sanitize_text_field( $_GET['post_type'] ) : 'post' );
-					break;
-			}
-
-			return $context;
+			_deprecated_function( __METHOD__, 'fieldmaanger-bylines-0.3.0', 'fm_get_context' );
+			return fm_get_context();
 		}
 	}
 }

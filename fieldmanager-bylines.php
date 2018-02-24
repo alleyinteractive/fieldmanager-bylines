@@ -4,7 +4,7 @@
  * Plugin URI: http://github.com/alleyinteractive/fieldmanager-bylines
  * Description: Allow creation of guest accounts to serve as Authors, Editors, Illustrators etc for a post.
  * Author: Will Gladstone, David Herrera, Matt Boynes, Erick Hitter
- * Version: 0.2
+ * Version: 0.3
  * Author URI: http://www.alleyinteractive.com/
  *
  * @package Fieldmanager_Bylines
