@@ -293,7 +293,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 * @param string $label Optional label.
 		 * @param array  $args Meta box arguments.
 		 */
-		function add_byline_meta_box( $type = 'author', $label = null, $args = array() ) {
+		public function add_byline_meta_box( $type = 'author', $label = null, $args = array() ) {
 
 			if ( is_admin() ) {
 				$context         = fm_get_context();
@@ -553,7 +553,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		public function is_byline_object( $byline ) {
 			// Comment avatars in core are always called with the comment object.
 			// get_avatar only uses user ids in the admin area.
-			if ( ( is_object( $byline ) && ! empty( $byline->post_type ) && $byline->post_type == $this->name ) ||
+			if ( ( is_object( $byline ) && ! empty( $byline->post_type ) && $byline->post_type === $this->name ) ||
 				( is_numeric( $byline ) && get_post_type( $byline ) === $this->name ) ) {
 				return true;
 			}
@@ -568,15 +568,19 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 */
 		public function get_byline_associated_posts( $byline_id ) {
 			global $wpdb;
-			// meta_keys are indexed so this should be speedy.
-			$meta_rows        = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT A.post_id, A.meta_key
-				FROM $wpdb->postmeta A
-				WHERE A.meta_key LIKE %s",
-					'fm_bylines_%_' . $byline_id
-				)
-			);
+
+			$byline_id   = absint( $byline_id );
+			$cache_group = 'fieldmanager-byline-linked-posts';
+
+			$meta_rows = wp_cache_get( $byline_id, $cache_group );
+
+			if ( false === $meta_rows ) {
+				// meta_keys are indexed so this should be speedy.
+				$meta_rows = $wpdb->get_results( $wpdb->prepare( "SELECT A.post_id, A.meta_key FROM $wpdb->postmeta A WHERE A.meta_key LIKE %s", 'fm_bylines_%_' . $byline_id ) );
+
+				wp_cache_set( $byline_id, $meta_rows, $cache_group, 5 * MINUTE_IN_SECONDS );
+			}
+
 			$associated_posts = array();
 			if ( ! empty( $meta_rows ) ) {
 				foreach ( $meta_rows as $meta_row ) {
@@ -860,8 +864,9 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		 */
 		public function write_byline( $bylines, $before = null, $separator = null, $final_separator = null, $after = null ) {
 			if ( empty( $bylines ) ) {
-				return;
+				return '';
 			}
+
 			// Allow these to be filtered in case folks want to change the way the authors are handled.
 			$before          = ( empty( $before ) ) ? __( 'By', 'fm_bylines' ) : $before;
 			$before          = apply_filters( 'fm_bylines_write_byline_before', $before );
@@ -876,6 +881,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 			$both            = array_filter( array_merge( array( $first ), $last ) );
 			$byline          = wp_kses_post( $before ) . ' ' . implode( esc_html( ' ' . $final_separator . ' ' ), $both );
 			$byline         .= ( empty( $after ) ) ? '' : ' ' . wp_kses_post( $after );
+
 			return $byline;
 		}
 	}
