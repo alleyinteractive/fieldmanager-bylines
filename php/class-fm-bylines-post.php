@@ -113,7 +113,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		 */
 		public function set_posts_columns( $columns ) {
 			$new_cols = array(
-				'cb' => $columns['cb'],
+				'cb'    => $columns['cb'],
 				'title' => $columns['title'],
 			);
 			foreach ( $this->byline_types  as $type ) {
@@ -137,18 +137,19 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 		/**
 		 * Display the byline links
+		 *
 		 * @param string $column_name
-		 * @param int $post_id
+		 * @param int    $post_id
 		 * @return void
 		 */
 		public function display_byline_type_column( $column_name, $post_id ) {
 			if ( preg_match( '/^fm_byline_(.*)$/', $column_name, $matches ) ) {
-				$bylines = $this->get_byline( $post_id, $matches[1] );
+				$bylines      = $this->get_byline( $post_id, $matches[1] );
 				$byline_links = array();
 				foreach ( $bylines as $byline ) {
 					$byline_links[] = '<a href="' . esc_url( get_edit_post_link( $byline->ID ) ) . '">' . esc_html( $byline->post_title ) . '</a>';
 				}
-				echo implode( ', ',  $byline_links );
+				echo implode( ', ', $byline_links );
 			}
 		}
 
@@ -164,7 +165,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 
 			if ( is_single() && ! empty( $object->ID ) && $this->name == $object->post_type ) {
 				$templates = array();
-				$type = $this->get_byline_type();
+				$type      = $this->get_byline_type();
 				if ( ! empty( $type ) ) {
 					if ( 'author' == $type ) {
 						$templates = array(
@@ -185,7 +186,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 						return get_query_template( 'single', $templates );
 					}
 				}
-			} else if ( is_post_type_archive( $this->name ) ) {
+			} elseif ( is_post_type_archive( $this->name ) ) {
 				$type = $this->get_byline_type();
 				if ( ! empty( $type ) ) {
 					$post_type = empty( $object->post_type ) ? $this->name : $object->post_type;
@@ -230,13 +231,13 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 				if ( $type != $this->slug ) {
 					$type_rewrites = array(
 						$type . '/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&feed=$matches[2]',
-						$type . '/([^/]+)/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&feed=$matches[2]',
-						$type . '/([^/]+)/page/?([0-9]{1,})/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&paged=$matches[2]',
-						$type . '/([^/]+)/?$' => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type,
-						$type . '/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '',
-						$type . '/feed/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
-						$type . '/(feed|rdf|rss|rss2|atom)/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
-						$type . '/page/([0-9]{1,})/?$' => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&paged=$matches[1]',
+						$type . '/([^/]+)/(feed|rdf|rss|rss2|atom)/?$'      => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&feed=$matches[2]',
+						$type . '/([^/]+)/page/?([0-9]{1,})/?$'             => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type . '&paged=$matches[2]',
+						$type . '/([^/]+)/?$'                               => 'index.php?' . $this->name . '=$matches[1]&byline_type=' . $type,
+						$type . '/?$'                                       => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '',
+						$type . '/feed/(feed|rdf|rss|rss2|atom)/?$'         => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
+						$type . '/(feed|rdf|rss|rss2|atom)/?$'              => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&feed=$matches[1]',
+						$type . '/page/([0-9]{1,})/?$'                      => 'index.php?post_type=' . $this->name . '&byline_type=' . $type . '&paged=$matches[1]',
 					);
 					foreach ( $type_rewrites as $rule => $rewrite ) {
 						add_rewrite_rule( $rule, $rewrite, 'top' );
@@ -258,7 +259,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 				case 'post.php':
 					if ( ! empty( $_POST['action'] ) && ( 'editpost' === $_POST['action'] || 'newpost' === $_POST['action'] ) ) {
 						$context = array( 'post', sanitize_text_field( $_POST['post_type'] ) );
-					} elseif ( !empty( $_GET['post'] ) ) {
+					} elseif ( ! empty( $_GET['post'] ) ) {
 						$context = array( 'post', get_post_type( intval( $_GET['post'] ) ) );
 					}
 					break;
