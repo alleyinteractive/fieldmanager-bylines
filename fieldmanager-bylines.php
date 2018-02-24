@@ -11,7 +11,7 @@
  */
 
 // Plugin Dependencies handler.
-require_once dirname( __FILE__ ) . '/php/class-plugin-dependency.php';
+require_once dirname( __FILE__ ) . '/php/class-fm-bylines-plugin-dependencies.php';
 
 /**
  * Load plugin
@@ -34,7 +34,7 @@ add_action( 'plugins_loaded', 'fm_bylines_init' );
  * Load plugin dependencies
  */
 function fm_bylines_dependency() {
-	$fm_bylines_dependency = new Plugin_Dependency( 'Fieldmanager Bylines', 'Fieldmanager', 'https://github.com/alleyinteractive/wordpress-fieldmanager' );
+	$fm_bylines_dependency = new FM_Bylines_Plugin_Dependencies( 'Fieldmanager Bylines', 'Fieldmanager', 'https://github.com/alleyinteractive/wordpress-fieldmanager' );
 	if ( ! $fm_bylines_dependency->verify() ) {
 		wp_die( wp_kses_post( $fm_bylines_dependency->message() ) );
 	}
