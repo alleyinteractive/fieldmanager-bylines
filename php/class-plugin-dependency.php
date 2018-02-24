@@ -29,9 +29,9 @@ if ( ! class_exists( 'Plugin_Dependency' ) ) {
 			include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 			// Set the plugin defaults
-			$this->plugin_name = $plugin_name;
+			$this->plugin_name     = $plugin_name;
 			$this->dependency_name = $dependency_name;
-			$this->dependency_uri = $dependency_uri;
+			$this->dependency_uri  = $dependency_uri;
 
 			// Get the currently installed plugins
 			$this->installed_plugins = get_plugins();
@@ -83,9 +83,9 @@ if ( ! class_exists( 'Plugin_Dependency' ) ) {
 			$plugin_file = $this->info();
 			if ( false !== $plugin_file ) {
 				return sprintf(
-					__( '<p style="font-family: sans-serif; font-size: 12px">%s<br>Please <a href="%s" target="_top">activate %s</a> and try again.</p>' ),
+					__( '<p style="font-family: sans-serif; font-size: 12px">%1$s<br>Please <a href="%2$s" target="_top">activate %3$s</a> and try again.</p>' ),
 					$this->dependency_message(),
-					wp_nonce_url( self_admin_url( 'plugins.php?action=activate&plugin='.$plugin_file ), 'activate-plugin_'.$plugin_file ),
+					wp_nonce_url( self_admin_url( 'plugins.php?action=activate&plugin=' . $plugin_file ), 'activate-plugin_' . $plugin_file ),
 					$this->dependency_name
 				);
 			}
@@ -107,21 +107,21 @@ if ( ! class_exists( 'Plugin_Dependency' ) ) {
 			if ( is_wp_error( $info ) && filter_var( $this->dependency_uri, FILTER_VALIDATE_URL ) ) {
 				// The plugin is not available from WordPress.org
 				$install_instructions = sprintf(
-					__( '<br>Please <a href="%s" target="_blank">download and install %s</a> and try again.' ),
+					__( '<br>Please <a href="%1$s" target="_blank">download and install %2$s</a> and try again.' ),
 					$this->dependency_uri,
 					$this->dependency_name
 				);
-			} else if ( ! is_wp_error( $info ) ) {
+			} elseif ( ! is_wp_error( $info ) ) {
 				// The plugin is available from WordPress.org
 				$install_instructions = sprintf(
-					__( '<br>Please <a href="%s" target="_top">install %s</a> and try again.' ),
+					__( '<br>Please <a href="%1$s" target="_top">install %2$s</a> and try again.' ),
 					wp_nonce_url( self_admin_url( 'update.php?action=install-plugin&plugin=' . $this->slug ), 'install-plugin_' . $this->slug ),
 					$this->dependency_name
 				);
 			}
 
 			return sprintf(
-				__( '<p style="font-family: sans-serif; font-size: 12px">%s%s</p>' ),
+				__( '<p style="font-family: sans-serif; font-size: 12px">%1$s%2$s</p>' ),
 				$this->dependency_message(),
 				$install_instructions
 			);
@@ -134,7 +134,7 @@ if ( ! class_exists( 'Plugin_Dependency' ) ) {
 		 */
 		private function dependency_message() {
 			return sprintf(
-				__( '%s requires that %s is installed and active.' ),
+				__( '%1$s requires that %2$s is installed and active.' ),
 				$this->plugin_name,
 				$this->dependency_name
 			);

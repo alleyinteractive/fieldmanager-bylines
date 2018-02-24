@@ -1,7 +1,6 @@
 <?php
 /**
  * Setup Author specific hooks using fieldmanager-bylines
- *
  */
 if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 
@@ -52,14 +51,15 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 
 		/**
 		 * Get the FM Author
+		 *
 		 * @param string $display_name
 		 * @return string
 		 */
 		public function get_the_author( $display_name ) {
-			$authors = $this->get_byline();
+			$authors      = $this->get_byline();
 			$display_name = '';
 			if ( ! empty( $authors ) ) {
-				$authors = wp_list_pluck( $authors, 'post_title' );
+				$authors      = wp_list_pluck( $authors, 'post_title' );
 				$display_name = implode( ', ', $authors );
 			}
 			return $display_name;
@@ -68,8 +68,8 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		/**
 		 * Get the author link
 		 *
-		 * @param string $link
-		 * @param int $author_id (WP user id)
+		 * @param string                             $link
+		 * @param int                                $author_id (WP user id)
 		 * @param $author_nicename (WP user nicename)
 		 * @return string
 		 */

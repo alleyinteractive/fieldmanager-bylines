@@ -13,16 +13,16 @@ Version: 0.2
 Author URI: http://www.alleyinteractive.com/
 */
 
-require_once( dirname( __FILE__ ) . '/php/class-plugin-dependency.php' );
+require_once dirname( __FILE__ ) . '/php/class-plugin-dependency.php';
 
 function fm_bylines_init() {
-	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines.php' );
-	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-post.php' );
-	require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-author.php' );
-	require_once( dirname( __FILE__ ) . '/functions.php' );
+	require_once dirname( __FILE__ ) . '/php/class-fm-bylines.php';
+	require_once dirname( __FILE__ ) . '/php/class-fm-bylines-post.php';
+	require_once dirname( __FILE__ ) . '/php/class-fm-bylines-author.php';
+	require_once dirname( __FILE__ ) . '/functions.php';
 
 	if ( defined( 'WP_CLI' ) && WP_CLI ) {
-		require_once( dirname( __FILE__ ) . '/php/class-fm-bylines-cli.php' );
+		require_once dirname( __FILE__ ) . '/php/class-fm-bylines-cli.php';
 	}
 
 	add_action( 'wp_enqueue_scripts', 'fm_bylines_enqueue_assets' );
@@ -41,6 +41,7 @@ register_activation_hook( __FILE__, 'fm_bylines_dependency' );
 
 /**
  * Get the base URL for this plugin.
+ *
  * @return string URL pointing to Fieldmanager Plugin top directory.
  */
 function fm_bylines_get_baseurl() {
