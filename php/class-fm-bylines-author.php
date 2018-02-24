@@ -1,17 +1,35 @@
 <?php
 /**
  * Setup Author specific hooks using fieldmanager-bylines
+ *
+ * @package Fieldmanager_Bylines
  */
+
 if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 
+	/**
+	 * Class FM_Bylines_Author
+	 */
 	class FM_Bylines_Author extends FM_Bylines_Post {
-
+		/**
+		 * The one true author object
+		 *
+		 * @var object
+		 */
 		private static $instance;
 
+		/**
+		 * Silence is golden
+		 */
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
 		}
 
+		/**
+		 * Instantiate singleton
+		 *
+		 * @return object
+		 */
 		public static function instance() {
 			if ( ! isset( self::$instance ) ) {
 				self::$instance = new FM_Bylines_Author();
@@ -20,9 +38,14 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 			return self::$instance;
 		}
 
+		/**
+		 * Register plugin hooks
+		 */
 		public function setup() {
+			// Assume we need this plugin precisely because there are multiple authors.
+			add_filter( 'is_multi_author', '__return_true' );
+
 			add_filter( 'the_author', array( $this, 'get_the_author' ) );
-			add_filter( 'is_multi_author', array( $this, 'is_multi_author' ) );
 
 			$keys = $this->byline_meta_keys();
 			foreach ( array_keys( $keys ) as $key ) {
@@ -32,27 +55,16 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 			add_filter( 'the_author_posts_link', array( $this, 'get_author_posts_link' ) );
 			add_filter( 'author_link', array( $this, 'get_author_link' ), 10, 3 );
 
-			// Remove traditional author rewrite rules
+			// Remove traditional author rewrite rules.
 			add_filter( 'author_rewrite_rules', array( $this, 'set_author_rewrite_rules' ) );
 
 			add_action( 'transition_post_status', array( $this, 'early_transition_post_status' ), 1, 3 );
 		}
 
 		/**
-		 * [filter_is_multi_author description]
-		 *
-		 * @param boolean $is_multi_author
-		 * @return boolean
-		 */
-		function is_multi_author( $is_multi_author ) {
-			// Assume we need this plugin precisely because there are multiple authors.
-			return true;
-		}
-
-		/**
 		 * Get the FM Author
 		 *
-		 * @param string $display_name
+		 * @param string $display_name Display name to override.
 		 * @return string
 		 */
 		public function get_the_author( $display_name ) {
@@ -68,9 +80,9 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		/**
 		 * Get the author link
 		 *
-		 * @param string                             $link
-		 * @param int                                $author_id (WP user id)
-		 * @param $author_nicename (WP user nicename)
+		 * @param string $link Author URL.
+		 * @param int    $author_id WP user id.
+		 * @param string $author_nicename WP user nicename.
 		 * @return string
 		 */
 		public function get_author_link( $link, $author_id, $author_nicename ) {
@@ -81,7 +93,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		/**
 		 * Get the author posts link html
 		 *
-		 * @param string $link
+		 * @param string $link Original link.
 		 * @return string
 		 */
 		public function get_author_posts_link( $link ) {
@@ -91,10 +103,9 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		/**
 		 * Fires before the default priority when a post transitions to a new status.
 		 *
-		 * @param string $new_status
-		 * @param string $old_status
-		 * @param object $post
-		 * @return void
+		 * @param string $new_status New post status.
+		 * @param string $old_status Old post status.
+		 * @param object $post Post object.
 		 */
 		public function early_transition_post_status( $new_status, $old_status, $post ) {
 			// Don't bother clearing the multi-author transient when a post status changes.
@@ -103,6 +114,9 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 
 		/**
 		 * Remove default rewrite rules for authors
+		 *
+		 * @param array $author_rewrite Author rewrite rules.
+		 * @return array
 		 */
 		public function set_author_rewrite_rules( $author_rewrite ) {
 			return array();
@@ -110,7 +124,12 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 	}
 }
 
-function FM_Bylines_Author() {
+/**
+ * FM Bylines instance
+ *
+ * @return object
+ */
+function FM_Bylines_Author() { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid, Generic.Functions.OpeningFunctionBraceKernighanRitchie.ContentAfterBrace
 	return FM_Bylines_Author::instance();
 }
 add_action( 'after_setup_theme', 'FM_Bylines_Author' );
