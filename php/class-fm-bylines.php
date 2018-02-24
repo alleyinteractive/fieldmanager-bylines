@@ -614,12 +614,12 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				'posts_per_page'   => 50,
 				'post_type'        => $this->name,
 				'post_status'      => 'publish',
-				'suppress_filters' => 'false',
+				'suppress_filters' => false,
 				'include'          => $byline_ids,
 			);
 			$args       = wp_parse_args( $params, $defaults );
 
-			return ! empty( $byline_ids ) ? get_posts( $args ) : array();
+			return ! empty( $byline_ids ) ? get_posts( $args ) : array(); // phpcs:ignore WordPress.VIP.RestrictedFunctions.get_posts_get_posts
 		}
 
 		/**
@@ -657,7 +657,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				'suppress_filters' => false,
 			);
 			$args     = wp_parse_args( $params, $defaults );
-			return get_posts( $args );
+			return get_posts( $args ); // phpcs:ignore WordPress.VIP.RestrictedFunctions.get_posts_get_posts
 		}
 
 		/**
@@ -835,7 +835,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				$user_id = get_current_user_id();
 			}
 
-			$bylines = get_posts(
+			$bylines = get_posts( // phpcs:ignore WordPress.VIP.RestrictedFunctions.get_posts_get_posts
 				array(
 					'post_type'           => $this->name,
 					'meta_key'            => 'fm_bylines_user_mapping',

@@ -39,24 +39,26 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 
 				foreach ( $cap_terms as $cap_term ) {
 					$args     = array(
-						'post_type'   => $coauthors_plus->guest_authors->post_type,
-						'name'        => $cap_term->slug,
-						'post_status' => 'publish',
-						'numberposts' => 1,
+						'post_type'        => $coauthors_plus->guest_authors->post_type,
+						'name'             => $cap_term->slug,
+						'post_status'      => 'publish',
+						'numberposts'      => 1,
+						'suppress_filters' => false,
 					);
-					$cap_post = get_posts( $args );
+					$cap_post = get_posts( $args ); // phpcs:ignore WordPress.VIP.RestrictedFunctions.get_posts_get_posts
 					if ( ! empty( $cap_post[0]->ID ) ) {
 						$cap_meta = apply_filters( 'fm_bylines_cli_cap_meta', get_post_meta( $cap_post[0]->ID ), $cap_post[0], $cap_term );
 
 						// Check to see if a byline exists for this CAP already.
 						$byline_slug = preg_replace( '/^cap-/', '', $cap_term->slug );
 						$args        = array(
-							'post_type'   => FM_Bylines()->name,
-							'name'        => $byline_slug,
-							'post_status' => 'publish',
-							'numberposts' => 1,
+							'post_type'        => FM_Bylines()->name,
+							'name'             => $byline_slug,
+							'post_status'      => 'publish',
+							'numberposts'      => 1,
+							'suppress_filters' => false,
 						);
-						$byline_post = get_posts( $args );
+						$byline_post = get_posts( $args ); // phpcs:ignore WordPress.VIP.RestrictedFunctions.get_posts_get_posts
 
 						if ( empty( $byline_post[0]->ID ) ) {
 							// Create a byline post.
