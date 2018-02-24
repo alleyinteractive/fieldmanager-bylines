@@ -1,10 +1,10 @@
-# Fieldmanager Bylines #
+=== Fieldmanager Bylines ===
 
 A WordPress plugin that allows for multiple authors on a single post and allows for multiple byline types.  This plugin is a lightweight alternative to Co-Authors plus and requires [Fieldmanager](http://fieldmanager.org).
 
-## Frequently Asked Questions ##
+== Frequently Asked Questions ==
 
-### Custom Byline Types ###
+= Custom Byline Types =
 
 With this plugin, you can offer more than one type of byline. To do so:
 
