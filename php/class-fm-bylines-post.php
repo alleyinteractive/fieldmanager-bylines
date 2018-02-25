@@ -26,17 +26,22 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		public $byline_types;
 
 		/**
-		 * Fieldmanager context
-		 *
-		 * @var array
-		 */
-		private $context;
-
-		/**
 		 * Silence is golden
 		 */
 		private function __construct() {
 			/* Don't do anything, needs to be initialized via instance() method */
+		}
+
+		/**
+		 * Defer to FM for context, deprecating internal handling
+		 *
+		 * @param string $property Property name.
+		 * @return mixed
+		 */
+		public function __get( $property ) {
+			if ( 'context' === $property ) {
+				return fm_get_context();
+			}
 		}
 
 		/**
@@ -56,8 +61,6 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		 * Register plugin hooks
 		 */
 		public function setup() {
-			$this->context = fm_get_context();
-
 			// Support byline types by default.
 			$this->byline_types = apply_filters( 'fm_bylines_filter_types', array( 'author' ) );
 
@@ -292,7 +295,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		 */
 		public function set_context() {
 			_deprecated_function( __METHOD__, 'fieldmaanger-bylines-0.3.0', 'fm_get_context' );
-			return fm_get_context();
+			return $this->context;
 		}
 	}
 }
