@@ -115,7 +115,7 @@ class FM_Bylines_CLI extends WP_CLI_Command {
 						if ( $clear_data ) {
 							// We are just flipping the post id here.
 							global $wpdb;
-							$wpdb->update( $wpdb->postmeta, array( 'post_id' => $byline_id ), array( 'post_id' => $cap_post[0]->ID ), array( '%d' ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+							$wpdb->update( $wpdb->postmeta, array( 'post_id' => $byline_id ), array( 'post_id' => $cap_post[0]->ID ), array( '%d' ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.VIP.DirectDatabaseQuery.NoCaching
 						} else {
 							// Copy cap meta.
 							foreach ( $cap_meta as $key => $value ) {
