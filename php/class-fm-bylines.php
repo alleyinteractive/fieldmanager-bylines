@@ -576,7 +576,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 
 			if ( false === $meta_rows ) {
 				// meta_keys are indexed so this should be speedy.
-				$meta_rows = $wpdb->get_results( $wpdb->prepare( "SELECT A.post_id, A.meta_key FROM $wpdb->postmeta A WHERE A.meta_key LIKE %s", 'fm_bylines_%_' . $byline_id ) );
+				$meta_rows = $wpdb->get_results( $wpdb->prepare( "SELECT A.post_id, A.meta_key FROM $wpdb->postmeta A WHERE A.meta_key LIKE %s", 'fm_bylines_%_' . $byline_id ) ); // phpcs:ignore WordPress.VIP.DirectDatabaseQuery.NoCaching
 
 				wp_cache_set( $byline_id, $meta_rows, $cache_group, 5 * MINUTE_IN_SECONDS );
 			}
