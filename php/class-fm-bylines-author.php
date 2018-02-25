@@ -92,8 +92,6 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 				return $this->get_byline_url( array_shift( $byline_ids ) );
 			}
 
-			// TODO: fix through name overide when multiple.
-
 			return '#';
 		}
 
