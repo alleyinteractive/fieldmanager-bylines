@@ -41,6 +41,7 @@ register_activation_hook( __FILE__, 'fm_bylines_dependency' );
 
 /**
  * Get the base URL for this plugin.
+ *
  * @return string URL pointing to Fieldmanager Plugin top directory.
  */
 function fm_bylines_get_baseurl() {
