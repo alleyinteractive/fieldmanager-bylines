@@ -49,6 +49,10 @@ before_script:
       phpcs --config-set installed_paths $HOME/.composer/vendor/wp-coding-standards/wpcs
     fi
 
+  # Plugin dependencies
+  - git clone https://github.com/alleyinteractive/wordpress-fieldmanager.git /tmp/wordpress/wp-content/plugins/wordpress-fieldmanager
+  - export FM_DIR=/tmp/wordpress/wp-content/plugins/wordpress-fieldmanager
+
 script:
   - |
     if [[ ! -z "$WP_VERSION" ]] ; then
@@ -57,5 +61,5 @@ script:
     fi
   - |
     if [[ "$WP_TRAVISCI" == "phpcs" ]] ; then
-      phpcs
+      phpcs -p -s -v -n --standard=./phpcs.xml.dist --extensions=php .
     fi
