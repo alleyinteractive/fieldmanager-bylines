@@ -28,7 +28,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		/**
 		 * Instantiate singleton
 		 *
-		 * @return object
+		 * @return FM_Bylines_Author
 		 */
 		public static function instance() {
 			if ( ! isset( self::$instance ) ) {
