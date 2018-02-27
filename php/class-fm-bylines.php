@@ -41,7 +41,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 		/**
 		 * Instantiate singleton
 		 *
-		 * @return object
+		 * @return FM_Bylines
 		 */
 		public static function instance() {
 			if ( ! isset( self::$instance ) ) {
