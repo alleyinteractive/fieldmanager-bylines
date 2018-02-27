@@ -14,7 +14,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		/**
 		 * The one true author object
 		 *
-		 * @var object
+		 * @var FM_Bylines_Author
 		 */
 		private static $instance;
 
@@ -127,7 +127,7 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 /**
  * FM Bylines Author instance
  *
- * @return object
+ * @return FM_Bylines_Author
  */
 function FM_Bylines_Author() { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid, Generic.Functions.OpeningFunctionBraceKernighanRitchie.ContentAfterBrace
 	return FM_Bylines_Author::instance();
