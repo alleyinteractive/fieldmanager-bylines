@@ -14,7 +14,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 		/**
 		 * The one true object
 		 *
-		 * @var object
+		 * @var FM_Bylines_Post
 		 */
 		private static $instance;
 
@@ -300,7 +300,7 @@ if ( ! class_exists( 'FM_Bylines_Post' ) ) {
 /**
  * FM Bylines Post instance
  *
- * @return object
+ * @return FM_Bylines_Post
  */
 function FM_Bylines_Post() { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid, Generic.Functions.OpeningFunctionBraceKernighanRitchie.ContentAfterBrace
 	return FM_Bylines_Post::instance();
