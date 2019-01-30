@@ -616,6 +616,7 @@ if ( ! class_exists( 'FM_Bylines' ) ) {
 				'post_status'      => 'publish',
 				'suppress_filters' => false,
 				'include'          => $byline_ids,
+				'orderby'          => 'post__in',
 			);
 			$args       = wp_parse_args( $params, $defaults );
 
