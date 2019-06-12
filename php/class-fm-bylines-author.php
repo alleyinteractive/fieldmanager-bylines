@@ -87,7 +87,12 @@ if ( ! class_exists( 'FM_Bylines_Author' ) ) {
 		 */
 		public function get_author_link( $link, $author_id, $author_nicename ) {
 			$byline_ids = $this->get_byline_ids();
-			return $link;
+
+			if ( 1 === count( $byline_ids ) ) {
+				return $this->get_byline_url( array_shift( $byline_ids ) );
+			}
+
+			return '#';
 		}
 
 		/**
